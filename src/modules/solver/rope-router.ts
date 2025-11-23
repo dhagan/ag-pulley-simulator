@@ -177,7 +177,7 @@ function checkLineCircleIntersection(
 function calculateTangentPointsForRope(
     ropeStart: Point,
     ropeEnd: Point,
-    pulley: Pulley
+    pulley: Pulley | SpringPulley
 ): { entry: Point; exit: Point } | null {
     // Calculate tangent from rope start to pulley
     const tangentsFromStart = calculateTangentFromPointToCircle(

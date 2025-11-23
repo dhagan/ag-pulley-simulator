@@ -162,7 +162,7 @@ export function validateGraph(graph: Graph, system: SystemState): { valid: boole
     });
 
     // Check that pulleys have exactly 2 rope connections
-    graph.nodes.forEach((node, nodeId) => {
+    graph.nodes.forEach((_node, nodeId) => {
         // Skip virtual anchor nodes
         if (nodeId.endsWith('_anchor')) return;
         
