@@ -7,7 +7,12 @@ export const FBDLayer: React.FC = () => {
     const solverResult = useSystemStore((state) => state.solverResult);
     const showFBD = useSystemStore((state) => state.ui.showFBD);
 
-    if (!showFBD || !solverResult || !solverResult.solved) return null;
+    // Show FBD if toggle is on AND we have either:
+    // 1. A solved system, OR
+    // 2. Tension data from a partially solved system
+    if (!showFBD || !solverResult) return null;
+    const hasTensionData = solverResult.tensions && solverResult.tensions.size > 0;
+    if (!solverResult.solved && !hasTensionData) return null;
 
     const renderArrow = (start: Point, forceX: number, forceY: number, color: string, label: string, id: string) => {
         // Scale factor to make forces visible

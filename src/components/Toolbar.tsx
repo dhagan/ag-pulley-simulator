@@ -14,6 +14,7 @@ export const Toolbar: React.FC = () => {
     const reset = useSystemStore((state) => state.reset);
     const undo = useSystemStore((state) => state.undo);
     const createTestSystem = useSystemStore((state) => state.createTestSystem);
+    const createSimpleTest = useSystemStore((state) => state.createSimpleTest);
     const hasHistory = useSystemStore((state) => state.history.length > 0);
 
     const toolButtons = [
@@ -95,6 +96,14 @@ export const Toolbar: React.FC = () => {
                 title="Create a simple test system and solve it"
             >
                 🧪 Test
+            </button>
+
+            <button
+                className="primary"
+                onClick={createSimpleTest}
+                title="Simple mass hanging from anchor"
+            >
+                📏 Simple
             </button>
 
             <button

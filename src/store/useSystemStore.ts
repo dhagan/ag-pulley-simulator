@@ -39,6 +39,7 @@ interface SystemStore {
     reset: () => void;
     undo: () => void;
     createTestSystem: () => void;
+    createSimpleTest: () => void;
 }
 
 const initialSystemState: SystemState = {
@@ -199,6 +200,53 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
             }],
         };
         components.push(rope2);
+
+        set((state) => ({
+            history: [...state.history, state.system],
+            system: { ...state.system, components },
+        }));
+
+        get().updateGraph();
+        setTimeout(() => get().solve(), 500);
+    },
+
+    createSimpleTest: () => {
+        const components: Component[] = [];
+
+        // Just an anchor at the top
+        const anchor: Anchor = {
+            id: generateId('anchor'),
+            type: ComponentType.ANCHOR,
+            position: { x: 0, y: -200 },
+            fixed: true,
+        };
+        components.push(anchor);
+
+        // A mass hanging below
+        const mass: Mass = {
+            id: generateId('mass'),
+            type: ComponentType.MASS,
+            position: { x: 0, y: 100 },
+            mass: 10,
+        };
+        components.push(mass);
+
+        // A rope connecting them
+        const rope: Rope = {
+            id: generateId('rope'),
+            type: ComponentType.ROPE,
+            position: { x: 0, y: -50 },
+            startNodeId: anchor.id,
+            endNodeId: mass.id,
+            length: distance(anchor.position, mass.position),
+            segments: [{
+                start: anchor.position,
+                end: mass.position,
+                type: 'line' as const,
+                length: distance(anchor.position, mass.position)
+            }],
+        };
+        components.push(rope);
 
         set((state) => ({
             history: [...state.history, state.system],
