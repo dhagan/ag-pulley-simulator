@@ -1,4 +1,4 @@
-import { SystemState, SolverResult, Point } from '../types';
+import { SystemState, SolverResult } from '../types';
 import { buildGraph, validateGraph } from '../utils/graph-builder';
 import { buildEquationSystem, validateEquationSystem } from './equation-builder';
 import { solveLinearSystem, validateSolution } from './matrix-solver';
@@ -14,10 +14,12 @@ export function solvePulleySystem(system: SystemState): SolverResult {
         console.error('❌ SOLVER: Graph invalid', graphValidation.errors);
         return {
             tensions: new Map(),
+            segmentTensions: new Map(),
             springForces: new Map(),
             reactionForces: new Map(),
             displacements: new Map(),
             totalRopeLength: 0,
+            ropeSegmentAnalysis: new Map(),
             solved: false,
             error: `Graph validation failed: ${graphValidation.errors.join(', ')}`,
         };
@@ -31,10 +33,12 @@ export function solvePulleySystem(system: SystemState): SolverResult {
         console.error('❌ SOLVER: Equations invalid', eqValidation.error);
         return {
             tensions: new Map(),
+            segmentTensions: new Map(),
             springForces: new Map(),
             reactionForces: new Map(),
             displacements: new Map(),
             totalRopeLength: 0,
+            ropeSegmentAnalysis: new Map(),
             solved: false,
             error: eqValidation.error,
         };
@@ -45,10 +49,12 @@ export function solvePulleySystem(system: SystemState): SolverResult {
         console.error('❌ SOLVER: Linear solve failed', solverResult.error);
         return {
             tensions: new Map(),
+            segmentTensions: new Map(),
             springForces: new Map(),
             reactionForces: new Map(),
             displacements: new Map(),
             totalRopeLength: 0,
+            ropeSegmentAnalysis: new Map(),
             solved: false,
             error: `Solver failed: ${solverResult.error}`,
         };
@@ -82,11 +88,13 @@ export function solvePulleySystem(system: SystemState): SolverResult {
 
     return {
         tensions,
+        segmentTensions: new Map(),
         springForces,
         reactionForces: new Map(),
         displacements: new Map(),
         totalRopeLength,
         mechanicalAdvantage,
+        ropeSegmentAnalysis: new Map(),
         solved: true,
         error: solutionValidation.warnings.length > 0 ? `Warning: ${solutionValidation.warnings.join(', ')}` : undefined,
     };

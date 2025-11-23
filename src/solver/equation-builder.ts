@@ -1,7 +1,4 @@
 import { Graph, EquationSystem, SystemState } from '../types';
-import { all, create } from 'mathjs';
-
-const math = create(all);
 
 export function buildEquationSystem(graph: Graph, system: SystemState): EquationSystem {
     const unknowns: string[] = [];

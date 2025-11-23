@@ -2,6 +2,8 @@ import './styles/index.css';
 import { Canvas } from './components/Sketcher/Canvas';
 import { Toolbar } from './components/Toolbar';
 import { ResultsPanel } from './components/ResultsPanel';
+import { PropertyEditor } from './components/PropertyEditor';
+import { AnimatorControls } from './modules/animator';
 
 function App() {
     return (
@@ -44,7 +46,7 @@ function App() {
                 </div>
 
                 <div className="font-mono text-xs text-muted">
-                    v1.0.0
+                    v2.0.0-alpha • PSAT
                 </div>
             </header>
 
@@ -56,11 +58,22 @@ function App() {
                 style={{
                     flex: 1,
                     display: 'grid',
-                    gridTemplateColumns: '1fr 350px',
+                    gridTemplateColumns: '300px 1fr 350px',
                     gap: 'var(--spacing-md)',
                     minHeight: 0,
                 }}
             >
+                {/* Left Sidebar - Properties & Animation */}
+                <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 'var(--spacing-md)',
+                    overflowY: 'auto'
+                }}>
+                    <PropertyEditor />
+                    <AnimatorControls />
+                </div>
+
                 {/* Canvas */}
                 <div className="glass" style={{ overflow: 'hidden' }}>
                     <Canvas />

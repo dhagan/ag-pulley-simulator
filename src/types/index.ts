@@ -47,7 +47,13 @@ export interface Rope extends BaseComponent {
 export interface RopeSegment {
     start: Point;
     end: Point;
+    type: 'line' | 'arc';
     wrapsAroundPulleyId?: string;
+    arcCenter?: Point;
+    arcRadius?: number;
+    arcStartAngle?: number;
+    arcEndAngle?: number;
+    length: number;
 }
 
 // Spring: Linear elastic element
@@ -102,6 +108,7 @@ export interface Edge {
 export interface Graph {
     nodes: Map<string, Node>;
     edges: Map<string, Edge>;
+    ropeSegments: Map<string, RopeSegment[]>; // ropeId -> segments
 }
 
 // ============================================================================
@@ -111,12 +118,24 @@ export interface Graph {
 export interface RopeLengthConstraint {
     ropeId: string;
     totalLength: number;
+    segments: string[]; // segment IDs that make up this rope
 }
 
 export interface EquilibriumConstraint {
     nodeId: string;
     sumForcesX: number;
     sumForcesY: number;
+}
+
+export interface PulleyTorqueConstraint {
+    pulleyId: string;
+    ropeIds: string[]; // ropes that wrap around this pulley
+}
+
+export interface Constraint {
+    id: string;
+    type: 'rope_length' | 'equilibrium' | 'pulley_torque';
+    data: RopeLengthConstraint | EquilibriumConstraint | PulleyTorqueConstraint;
 }
 
 // ============================================================================
@@ -126,11 +145,9 @@ export interface EquilibriumConstraint {
 export interface SystemState {
     components: Component[];
     graph: Graph;
-    constraints: {
-        ropeLengths: RopeLengthConstraint[];
-        equilibrium: EquilibriumConstraint[];
-    };
+    constraints: Constraint[];
     gravity: number;
+    timestamp?: number; // For animation
 }
 
 // ============================================================================
@@ -138,14 +155,25 @@ export interface SystemState {
 // ============================================================================
 
 export interface SolverResult {
-    tensions: Map<string, number>;
+    tensions: Map<string, number>; // ropeId -> tension
+    segmentTensions: Map<string, number>; // segmentId -> tension
     springForces: Map<string, number>;
     reactionForces: Map<string, Point>;
     displacements: Map<string, Point>;
     totalRopeLength: number;
     mechanicalAdvantage?: number;
+    ropeSegmentAnalysis: Map<string, RopeAnalysis>; // ropeId -> analysis
     solved: boolean;
     error?: string;
+    equationSystem?: EquationSystem; // For debugging/educational display
+}
+
+export interface RopeAnalysis {
+    ropeId: string;
+    segments: RopeSegment[];
+    totalLength: number;
+    tension: number;
+    wrapsAroundPulleys: string[];
 }
 
 export interface EquationSystem {
@@ -187,5 +215,34 @@ export interface UIState {
     canvas: CanvasState;
     showGrid: boolean;
     showForces: boolean;
+    showFBD: boolean;
     animationEnabled: boolean;
 }
+
+// ============================================================================
+// Animator Types
+// ============================================================================
+
+export interface AnimationState {
+    isPlaying: boolean;
+    currentTime: number;
+    duration: number;
+    frames: AnimationFrame[];
+    degreesOfFreedom: DegreeOfFreedom[];
+}
+
+export interface AnimationFrame {
+    time: number;
+    componentPositions: Map<string, Point>;
+    ropeSegments: Map<string, RopeSegment[]>;
+}
+
+export interface DegreeOfFreedom {
+    id: string;
+    type: 'rope_end' | 'movable_pulley' | 'mass';
+    componentId: string;
+    initialPosition: Point;
+    currentPosition: Point;
+    constraints: string[]; // constraint IDs that govern this DOF
+}
+
