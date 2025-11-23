@@ -1,6 +1,7 @@
 import React from 'react';
 import { Rope as RopeType, ComponentType } from '../../../types';
 import { useSystemStore } from '../../../store/useSystemStore';
+import { generateRopePathFromSegments } from '../../../modules/solver/rope-router';
 
 interface RopeProps {
     rope: RopeType;
@@ -52,13 +53,46 @@ function getPulleyTangentPoint(
 }
 
 export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
-    const components = useSystemStore((state) => state.system.components);
+    const system = useSystemStore((state) => state.system);
+    const components = system.components;
+    const ropeSegments = system.graph.ropeSegments;
 
     const startComp = components.find(c => c.id === rope.startNodeId);
     const endComp = components.find(c => c.id === rope.endNodeId);
 
     if (!startComp || !endComp) return null;
 
+    // Use smart routing segments if available
+    const segments = ropeSegments.get(rope.id);
+    
+    if (segments && segments.length > 0) {
+        // Render using smart routing path
+        const pathData = generateRopePathFromSegments(segments);
+        
+        return (
+            <g onClick={onClick} style={{ cursor: 'pointer' }}>
+                <path
+                    d={pathData}
+                    stroke={isSelected ? 'var(--color-accent-cyan)' : 'var(--color-rope)'}
+                    strokeWidth={isSelected ? 4 : 3}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                
+                {/* End points */}
+                <circle cx={segments[0].start.x} cy={segments[0].start.y} r={3} fill="var(--color-rope)" />
+                <circle 
+                    cx={segments[segments.length - 1].end.x} 
+                    cy={segments[segments.length - 1].end.y} 
+                    r={3} 
+                    fill="var(--color-rope)" 
+                />
+            </g>
+        );
+    }
+    
+    // Fallback to simple line rendering
     let startPos = startComp.position;
     let endPos = endComp.position;
 

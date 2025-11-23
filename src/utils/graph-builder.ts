@@ -1,4 +1,5 @@
-import { SystemState, Graph, Node, Edge, ComponentType } from '../types';
+import { SystemState, Graph, Node, Edge, ComponentType, RopeSegment } from '../types';
+import { calculateRopeSegments } from '../modules/solver/rope-router';
 
 /**
  * Build a graph representation from the current system state
@@ -8,6 +9,7 @@ import { SystemState, Graph, Node, Edge, ComponentType } from '../types';
 export function buildGraph(system: SystemState): Graph {
     const nodes = new Map<string, Node>();
     const edges = new Map<string, Edge>();
+    const ropeSegments = new Map<string, RopeSegment[]>();
 
     // Create nodes from components
     system.components.forEach((component) => {
@@ -47,13 +49,31 @@ export function buildGraph(system: SystemState): Graph {
     // Create edges from ropes and springs
     system.components.forEach((component) => {
         if (component.type === ComponentType.ROPE) {
-            edges.set(component.id, {
-                id: component.id,
-                startNodeId: component.startNodeId,
-                endNodeId: component.endNodeId,
-                type: 'rope',
-                length: component.length,
-            });
+            const startNode = nodes.get(component.startNodeId);
+            const endNode = nodes.get(component.endNodeId);
+            
+            if (startNode && endNode) {
+                // Calculate smart rope segments with pulley detection
+                const segments = calculateRopeSegments(
+                    startNode.position,
+                    endNode.position,
+                    system,
+                    component.id
+                );
+                
+                ropeSegments.set(component.id, segments);
+                
+                // Calculate total length from segments
+                const totalLength = segments.reduce((sum, seg) => sum + seg.length, 0);
+                
+                edges.set(component.id, {
+                    id: component.id,
+                    startNodeId: component.startNodeId,
+                    endNodeId: component.endNodeId,
+                    type: 'rope',
+                    length: totalLength,
+                });
+            }
         } else if (component.type === ComponentType.SPRING) {
             edges.set(component.id, {
                 id: component.id,
@@ -66,7 +86,7 @@ export function buildGraph(system: SystemState): Graph {
         }
     });
 
-    return { nodes, edges };
+    return { nodes, edges, ropeSegments };
 }
 
 /**

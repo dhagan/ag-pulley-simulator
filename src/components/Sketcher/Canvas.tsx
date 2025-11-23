@@ -14,6 +14,8 @@ import { snapToGrid, generateId, distance } from '../../utils/math';
 export const Canvas: React.FC = () => {
     const svgRef = useRef<SVGSVGElement>(null);
     const [isPanning, setIsPanning] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const [draggedComponentId, setDraggedComponentId] = useState<string | null>(null);
     const [panStart, setPanStart] = useState<Point>({ x: 0, y: 0 });
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
 
@@ -21,6 +23,7 @@ export const Canvas: React.FC = () => {
     const ui = useSystemStore((state) => state.ui);
     const addComponent = useSystemStore((state) => state.addComponent);
     const selectComponent = useSystemStore((state) => state.selectComponent);
+    const updateComponent = useSystemStore((state) => state.updateComponent);
     const setViewBox = useSystemStore((state) => state.setViewBox);
     const ropeStartNodeId = useSystemStore((state) => state.ropeStartNodeId);
     const setRopeStartNode = useSystemStore((state) => state.setRopeStartNode);
@@ -114,81 +117,26 @@ export const Canvas: React.FC = () => {
     };
 
     const handleMouseDown: React.MouseEventHandler<SVGSVGElement> = (e) => {
-        // Handle canvas clicks for adding components via toolbar tools
-        if (e.button === 0 && e.target === e.currentTarget) {
-            const position = screenToSVG(e.clientX, e.clientY);
-            let snappedPos = position;
-            if (shouldSnap) {
-                snappedPos = snapToGrid(position, gridSize);
-            }
-
-            let newComponent: Component | null = null;
-
-            switch (currentTool) {
-                case Tool.ADD_ANCHOR:
-                    newComponent = {
-                        id: generateId('anchor'),
-                        type: ComponentType.ANCHOR,
-                        position: snappedPos,
-                        fixed: true,
-                    };
-                    break;
-                case Tool.ADD_PULLEY:
-                    newComponent = {
-                        id: generateId('pulley'),
-                        type: ComponentType.PULLEY,
-                        position: snappedPos,
-                        radius: 30,
-                        fixed: true,
-                    };
-                    break;
-                case Tool.ADD_MASS:
-                    newComponent = {
-                        id: generateId('mass'),
-                        type: ComponentType.MASS,
-                        position: snappedPos,
-                        mass: 10,
-                    };
-                    break;
-                case Tool.ADD_SPRING:
-                    // Springs need two nodes, so show info message or handle differently
-                    console.log('Spring tool: Click two components to connect with a spring');
-                    break;
-                case Tool.ADD_FORCE:
-                    newComponent = {
-                        id: generateId('force'),
-                        type: ComponentType.FORCE_VECTOR,
-                        position: snappedPos,
-                        Fx: 100,
-                        Fy: 0,
-                        appliedToNodeId: '',
-                    };
-                    break;
-                case Tool.SELECT:
-                case Tool.PAN:
-                case Tool.ADD_ROPE:
-                    // These tools don't create components on canvas click
-                    // PAN handled below, ADD_ROPE handled in component onClick
-                    break;
-            }
-
-            if (newComponent) {
-                addComponent(newComponent);
-                selectComponent(newComponent.id);
-                // Auto-switch back to SELECT tool after adding
-                setTool(Tool.SELECT);
-                return; // Don't start panning
-            }
-        }
-
-        // Left click (button 0) for panning when in PAN tool or SELECT tool
-        if (e.button === 0 && (currentTool === Tool.PAN || currentTool === Tool.SELECT)) {
+        // Left click (button 0) for panning or dragging
+        if (e.button === 0 && currentTool === Tool.SELECT && !isDragging) {
             setIsPanning(true);
             setPanStart({ x: e.clientX, y: e.clientY });
         }
     };
 
     const handleMouseMove: React.MouseEventHandler<SVGSVGElement> = (e) => {
+        if (isDragging && draggedComponentId) {
+            const currentPos = screenToSVG(e.clientX, e.clientY);
+            let newPos = currentPos;
+            
+            if (shouldSnap) {
+                newPos = snapToGrid(currentPos, gridSize);
+            }
+            
+            updateComponent(draggedComponentId, { position: newPos });
+            return;
+        }
+        
         if (!isPanning) return;
 
         const dx = (e.clientX - panStart.x) * (viewBox.width / (svgRef.current?.clientWidth || 1));
@@ -206,6 +154,8 @@ export const Canvas: React.FC = () => {
 
     const handleMouseUp: React.MouseEventHandler<SVGSVGElement> = () => {
         setIsPanning(false);
+        setIsDragging(false);
+        setDraggedComponentId(null);
     };
 
     const handleWheel: React.WheelEventHandler<SVGSVGElement> = (e) => {
@@ -222,10 +172,18 @@ export const Canvas: React.FC = () => {
     const renderComponent = (component: Component) => {
         const isSelected = component.id === selectedComponentId;
 
-        const onClick = (e?: MouseEvent) => {
-            if (e) e.stopPropagation(); // Prevent canvas click/pan start if needed
+        const onClick = (e: MouseEvent) => {
+            e.stopPropagation();
 
-            if (currentTool === Tool.ADD_ROPE) {
+            if (currentTool === Tool.SELECT) {
+                // Start dragging on mouse down for movable components
+                if (component.type !== ComponentType.ROPE && component.type !== ComponentType.SPRING) {
+                    setIsPanning(false); // Cancel panning if component clicked
+                    setIsDragging(true);
+                    setDraggedComponentId(component.id);
+                }
+                selectComponent(component.id);
+            } else if (currentTool === Tool.ADD_ROPE) {
                 if (!ropeStartNodeId) {
                     setRopeStartNode(component.id);
                     selectComponent(component.id);
@@ -243,7 +201,12 @@ export const Canvas: React.FC = () => {
                             startNodeId: ropeStartNodeId,
                             endNodeId: component.id,
                             length: ropeLength,
-                            segments: [{ start: startComp.position, end: component.position }],
+                            segments: [{
+                                start: startComp.position,
+                                end: component.position,
+                                type: 'line' as const,
+                                length: ropeLength
+                            }],
                         };
                         addComponent(newRope);
                         setRopeStartNode(null);
@@ -258,13 +221,13 @@ export const Canvas: React.FC = () => {
 
         switch (component.type) {
             case ComponentType.ANCHOR:
-                return <Anchor key={component.id} anchor={component} isSelected={isSelected} onClick={onClick} />;
+                return <Anchor key={component.id} anchor={component} isSelected={isSelected} onClick={() => onClick({} as MouseEvent)} />;
             case ComponentType.PULLEY:
-                return <Pulley key={component.id} pulley={component} isSelected={isSelected} onClick={onClick} />;
+                return <Pulley key={component.id} pulley={component} isSelected={isSelected} onClick={() => onClick({} as MouseEvent)} />;
             case ComponentType.MASS:
-                return <Mass key={component.id} mass={component} isSelected={isSelected} onClick={onClick} />;
+                return <Mass key={component.id} mass={component} isSelected={isSelected} onClick={() => onClick({} as MouseEvent)} />;
             case ComponentType.ROPE:
-                return <Rope key={component.id} rope={component} isSelected={isSelected} onClick={onClick} />;
+                return <Rope key={component.id} rope={component} isSelected={isSelected} onClick={() => onClick({} as MouseEvent)} />;
             case ComponentType.SPRING:
                 const startNode = system.components.find(c => c.id === component.startNodeId);
                 const endNode = system.components.find(c => c.id === component.endNodeId);
@@ -274,13 +237,13 @@ export const Canvas: React.FC = () => {
                         key={component.id}
                         spring={component}
                         isSelected={isSelected}
-                        onClick={onClick}
+                        onClick={() => onClick({} as MouseEvent)}
                         startPos={startNode.position}
                         endPos={endNode.position}
                     />
                 );
             case ComponentType.FORCE_VECTOR:
-                return <ForceVector key={component.id} force={component} isSelected={isSelected} onClick={onClick} />;
+                return <ForceVector key={component.id} force={component} isSelected={isSelected} onClick={() => onClick({} as MouseEvent)} />;
             default:
                 return null;
         }

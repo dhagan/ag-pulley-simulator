@@ -13,7 +13,7 @@ import {
 } from '../types';
 import { generateId, distance } from '../utils/math';
 import { buildGraph } from '../utils/graph-builder';
-import { solvePulleySystem } from '../solver';
+import { solvePulleySystem } from '../modules/solver';
 
 interface SystemStore {
     system: SystemState;
@@ -43,8 +43,8 @@ interface SystemStore {
 
 const initialSystemState: SystemState = {
     components: [],
-    graph: { nodes: new Map(), edges: new Map() },
-    constraints: { ropeLengths: [], equilibrium: [] },
+    graph: { nodes: new Map(), edges: new Map(), ropeSegments: new Map() },
+    constraints: [],
     gravity: 9.81,
 };
 
@@ -175,7 +175,12 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
             startNodeId: mass.id,
             endNodeId: pulley.id,
             length: distance(mass.position, pulley.position),
-            segments: [{ start: mass.position, end: pulley.position }],
+            segments: [{
+                start: mass.position,
+                end: pulley.position,
+                type: 'line' as const,
+                length: distance(mass.position, pulley.position)
+            }],
         };
         components.push(rope1);
 
@@ -186,7 +191,12 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
             startNodeId: pulley.id,
             endNodeId: anchor.id,
             length: distance(pulley.position, anchor.position),
-            segments: [{ start: pulley.position, end: anchor.position }],
+            segments: [{
+                start: pulley.position,
+                end: anchor.position,
+                type: 'line' as const,
+                length: distance(pulley.position, anchor.position)
+            }],
         };
         components.push(rope2);
 

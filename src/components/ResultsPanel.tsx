@@ -1,29 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSystemStore } from '../store/useSystemStore';
-import { buildGraph } from '../utils/graph-builder';
-import { buildEquationSystem } from '../solver/equation-builder';
 
 export const ResultsPanel: React.FC = () => {
     const solverResult = useSystemStore((state) => state.solverResult);
     const solve = useSystemStore((state) => state.solve);
     const components = useSystemStore((state) => state.system.components);
-    const system = useSystemStore((state) => state.system);
-    const [showEquations, setShowEquations] = useState(false);
-
-    // Build equation system for display
-    let equationSystem: any = null;
-    let graph: any = null;
-    try {
-        graph = buildGraph(system);
-        equationSystem = buildEquationSystem(graph, system);
-    } catch (e) {
-        console.error('Error building equations:', e);
-    }
-
-    const numUnknowns = equationSystem?.unknowns?.length || 0;
-    const numEquations = equationSystem?.A?.length || 0;
-    const isOverconstrained = numEquations > numUnknowns;
-    const isUnderconstrained = numEquations < numUnknowns;
 
     return (
         <div
@@ -80,134 +61,6 @@ export const ResultsPanel: React.FC = () => {
                 </div>
             </div>
 
-            {/* Equation System Diagnostics */}
-            {equationSystem && (
-                <>
-                    <div style={{ width: '100%', height: '1px', background: 'var(--color-border)' }} />
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
-                            <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>
-                                Equation System
-                            </h3>
-                            <button
-                                onClick={() => setShowEquations(!showEquations)}
-                                style={{
-                                    background: 'transparent',
-                                    border: '1px solid var(--color-border)',
-                                    color: 'var(--color-text)',
-                                    padding: '4px 8px',
-                                    cursor: 'pointer',
-                                    borderRadius: '4px',
-                                    fontSize: '0.75rem',
-                                }}
-                            >
-                                {showEquations ? 'Hide' : 'Show'} Details
-                            </button>
-                        </div>
-
-                        <div className="font-mono text-sm" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span className="text-secondary">Unknowns:</span>
-                                <span>{numUnknowns}</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span className="text-secondary">Equations:</span>
-                                <span style={{ color: isOverconstrained ? 'var(--color-accent-red)' : isUnderconstrained ? 'var(--color-accent-yellow)' : 'inherit' }}>
-                                    {numEquations}
-                                </span>
-                            </div>
-                            {isOverconstrained && (
-                                <div style={{
-                                    padding: '8px',
-                                    background: 'rgba(239, 68, 68, 0.1)',
-                                    border: '1px solid var(--color-accent-red)',
-                                    borderRadius: '4px',
-                                    fontSize: '0.75rem'
-                                }}>
-                                    ⚠️ OVERCONSTRAINED: {numEquations - numUnknowns} extra equation(s)
-                                </div>
-                            )}
-                            {isUnderconstrained && (
-                                <div style={{
-                                    padding: '8px',
-                                    background: 'rgba(234, 179, 8, 0.1)',
-                                    border: '1px solid var(--color-accent-yellow)',
-                                    borderRadius: '4px',
-                                    fontSize: '0.75rem'
-                                }}>
-                                    ⚠️ UNDERCONSTRAINED: Need {numUnknowns - numEquations} more equation(s)
-                                </div>
-                            )}
-                        </div>
-
-                        {showEquations && equationSystem && (
-                            <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.7rem' }}>
-                                <div style={{ marginBottom: 'var(--spacing-xs)' }}>
-                                    <strong>Unknowns:</strong>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
-                                        {equationSystem.unknowns.map((u: string, i: number) => (
-                                            <span key={i} style={{
-                                                background: 'rgba(59, 130, 246, 0.2)',
-                                                padding: '2px 6px',
-                                                borderRadius: '3px',
-                                                fontFamily: 'monospace'
-                                            }}>
-                                                {u}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div style={{ marginTop: 'var(--spacing-sm)' }}>
-                                    <strong>Equations (A·x = b):</strong>
-                                    <div style={{
-                                        marginTop: '4px',
-                                        maxHeight: '200px',
-                                        overflowY: 'auto',
-                                        fontFamily: 'monospace',
-                                        fontSize: '0.65rem',
-                                        background: 'rgba(0,0,0,0.3)',
-                                        padding: '8px',
-                                        borderRadius: '4px'
-                                    }}>
-                                        {equationSystem.A.map((row: number[], i: number) => (
-                                            <div key={i} style={{ marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'auto' }}>
-                                                {row.map((coef, j) => {
-                                                    if (coef === 0) return null;
-                                                    const sign = coef > 0 && j > 0 ? '+ ' : '';
-                                                    return (
-                                                        <span key={j}>
-                                                            {sign}{coef.toFixed(2)}·{equationSystem.unknowns[j]}{' '}
-                                                        </span>
-                                                    );
-                                                }).filter(Boolean).length > 0 ? (
-                                                    <>
-                                                        {row.map((coef, j) => {
-                                                            if (coef === 0) return null;
-                                                            const sign = coef > 0 && row.slice(0, j).some(c => c !== 0) ? '+ ' : '';
-                                                            return (
-                                                                <span key={j}>
-                                                                    {sign}{coef.toFixed(2)}·{equationSystem.unknowns[j]}{' '}
-                                                                </span>
-                                                            );
-                                                        })}
-                                                        = {equationSystem.b[i].toFixed(2)}
-                                                    </>
-                                                ) : (
-                                                    <span style={{ color: 'var(--color-text-secondary)' }}>
-                                                        0 = {equationSystem.b[i].toFixed(2)}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </>
-            )}
-
             {/* Solver Results */}
             {solverResult && (
                 <>
@@ -220,8 +73,52 @@ export const ResultsPanel: React.FC = () => {
 
                         {solverResult.solved ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                                {/* Rope Info */}
-                                {components.filter(c => c.type === 'rope').length > 0 && (
+                                {/* Rope Analysis */}
+                                {solverResult.ropeSegmentAnalysis && solverResult.ropeSegmentAnalysis.size > 0 && (
+                                    <div>
+                                        <h4 className="text-sm text-secondary" style={{ marginBottom: 'var(--spacing-xs)' }}>
+                                            Rope Analysis
+                                        </h4>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                                            {Array.from(solverResult.ropeSegmentAnalysis.values()).map((analysis) => (
+                                                <div key={analysis.ropeId} className="glass" style={{
+                                                    padding: 'var(--spacing-xs)',
+                                                    background: 'rgba(255,255,255,0.02)',
+                                                    border: '1px solid var(--color-border)'
+                                                }}>
+                                                    <div className="font-mono text-xs" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <div style={{ fontWeight: 'bold', color: 'var(--color-text)' }}>
+                                                            {analysis.ropeId.substring(0, 20)}...
+                                                        </div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span className="text-muted">Segments:</span>
+                                                            <span>{analysis.segments.length}</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span className="text-muted">Length:</span>
+                                                            <span>{(analysis.totalLength / 10).toFixed(1)} m</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span className="text-muted">Tension:</span>
+                                                            <span style={{ color: 'var(--color-rope)', fontWeight: 'bold' }}>
+                                                                {analysis.tension.toFixed(1)} N
+                                                            </span>
+                                                        </div>
+                                                        {analysis.wrapsAroundPulleys.length > 0 && (
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span className="text-muted">Pulleys:</span>
+                                                                <span>{analysis.wrapsAroundPulleys.length}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Rope Info (Legacy fallback) */}
+                                {(!solverResult.ropeSegmentAnalysis || solverResult.ropeSegmentAnalysis.size === 0) && components.filter(c => c.type === 'rope').length > 0 && (
                                     <div>
                                         <h4 className="text-sm text-secondary" style={{ marginBottom: 'var(--spacing-xs)' }}>
                                             Ropes
@@ -255,6 +152,28 @@ export const ResultsPanel: React.FC = () => {
                                     </div>
                                 )}
 
+                                {/* Force Equations */}
+                                <div>
+                                    <h4 className="text-sm text-secondary" style={{ marginBottom: 'var(--spacing-xs)' }}>
+                                        Force Equilibrium Equations
+                                    </h4>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                                        {components.filter(c => c.type === 'mass' || (c.type === 'pulley' && !(c as any).fixed)).map((comp: any) => (
+                                            <div key={comp.id} className="glass" style={{
+                                                padding: 'var(--spacing-xs)',
+                                                background: 'rgba(255,255,255,0.02)',
+                                                border: '1px solid var(--color-border)'
+                                            }}>
+                                                <div className="font-mono text-xs" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                    <div style={{ fontWeight: 'bold', color: 'var(--color-accent-blue)' }}>{comp.id}</div>
+                                                    <div>ΣFx = 0</div>
+                                                    <div>ΣFy = {comp.type === 'mass' ? `-${comp.mass}g` : '0'}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Mechanical Advantage */}
                                 {solverResult.mechanicalAdvantage && (
                                     <div className="glass" style={{
@@ -280,7 +199,7 @@ export const ResultsPanel: React.FC = () => {
                                 border: '1px solid var(--color-accent-red)',
                                 borderRadius: 'var(--radius-sm)',
                             }}>
-                                <p className="text-sm" style={{ color: 'var(--color-accent-red)', fontWeight: 'bold' }}>
+                                <p className="text-sm" style={{ color: 'var(--color-accent-red)' }}>
                                     {solverResult.error || 'Unable to solve system'}
                                 </p>
                             </div>

@@ -9,8 +9,6 @@ interface ForceVectorProps {
 
 export const ForceVector: React.FC<ForceVectorProps> = ({ force, isSelected, onClick }) => {
     const scale = 0.5; // Scale factor for visualization
-    const magnitude = Math.sqrt(force.Fx * force.Fx + force.Fy * force.Fy);
-    const length = magnitude * scale;
 
     // Calculate angle from components
     const angleRad = Math.atan2(-force.Fy, force.Fx); // Negative Fy because SVG Y is inverted
