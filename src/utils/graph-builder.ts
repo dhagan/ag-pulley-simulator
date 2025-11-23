@@ -29,8 +29,18 @@ export function buildGraph(system: SystemState): Graph {
                     id: component.id,
                     componentId: component.id,
                     position: component.position,
-                    isFixed: component.fixed,
-                    mass: component.fixed ? 0 : 0.5, // Assume movable pulleys have negligible mass
+                    isFixed: true, // Fixed pulleys are always fixed
+                    mass: 0,
+                });
+                break;
+
+            case ComponentType.SPRING_PULLEY:
+                nodes.set(component.id, {
+                    id: component.id,
+                    componentId: component.id,
+                    position: component.position,
+                    isFixed: false, // Spring pulleys can move
+                    mass: 0.5, // Small mass for the pulley itself
                 });
                 break;
 
@@ -86,13 +96,47 @@ export function buildGraph(system: SystemState): Graph {
         }
     });
 
+    // Add internal springs for spring pulleys
+    system.components.forEach((component) => {
+        if (component.type === ComponentType.SPRING_PULLEY) {
+            // Create virtual anchor point where spring is mounted
+            const anchorId = `${component.id}_anchor`;
+            const anchorPos = { ...component.position };
+            
+            // Adjust anchor position based on axis
+            if (component.axis === 'vertical') {
+                anchorPos.y -= component.restLength;
+            } else {
+                anchorPos.x -= component.restLength;
+            }
+            
+            nodes.set(anchorId, {
+                id: anchorId,
+                componentId: component.id,
+                position: anchorPos,
+                isFixed: true,
+                mass: 0,
+            });
+            
+            // Add spring edge between anchor and pulley
+            edges.set(`${component.id}_spring`, {
+                id: `${component.id}_spring`,
+                startNodeId: anchorId,
+                endNodeId: component.id,
+                type: 'spring',
+                stiffness: component.stiffness,
+                restLength: component.restLength,
+            });
+        }
+    });
+
     return { nodes, edges, ropeSegments };
 }
 
 /**
  * Validate that the graph is properly constructed
  */
-export function validateGraph(graph: Graph): { valid: boolean; errors: string[] } {
+export function validateGraph(graph: Graph, system: SystemState): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     // Check for disconnected nodes
@@ -113,6 +157,22 @@ export function validateGraph(graph: Graph): { valid: boolean; errors: string[] 
             );
             if (!hasConnections) {
                 errors.push(`Node ${node.id} is a floating mass with no connections`);
+            }
+        }
+    });
+
+    // Check that pulleys have exactly 2 rope connections
+    graph.nodes.forEach((node, nodeId) => {
+        // Skip virtual anchor nodes
+        if (nodeId.endsWith('_anchor')) return;
+        
+        const component = system.components.find(c => c.id === nodeId);
+        if (component && (component.type === ComponentType.PULLEY || component.type === ComponentType.SPRING_PULLEY)) {
+            const ropeConnections = Array.from(graph.edges.values()).filter(
+                (edge) => edge.type === 'rope' && (edge.startNodeId === nodeId || edge.endNodeId === nodeId)
+            );
+            if (ropeConnections.length !== 2) {
+                errors.push(`Pulley ${nodeId} must have exactly 2 rope connections (has ${ropeConnections.length})`);
             }
         }
     });

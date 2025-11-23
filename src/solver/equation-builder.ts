@@ -44,13 +44,52 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 const isEnd = edge.endNodeId === node.id;
                 if (!isStart && !isEnd) return;
 
-                const dx = endNode.position.x - startNode.position.x;
-                const dy = endNode.position.y - startNode.position.y;
-                const length = Math.sqrt(dx * dx + dy * dy);
-                if (length === 0) return;
+                let dirX: number, dirY: number;
 
-                const dirX = dx / length;
-                const dirY = dy / length;
+                // For ropes, use tangent points if available (for pulleys)
+                if (edge.type === 'rope') {
+                    const segments = graph.ropeSegments.get(edge.id);
+                    if (segments && segments.length > 0) {
+                        // Get the first or last segment depending on which end of the rope this node is
+                        const relevantSegment = isStart ? segments[0] : segments[segments.length - 1];
+                        
+                        // Calculate direction from the relevant segment endpoint to the node
+                        if (isStart) {
+                            // For start node, direction is from segment.start towards the rope
+                            const dx = relevantSegment.end.x - relevantSegment.start.x;
+                            const dy = relevantSegment.end.y - relevantSegment.start.y;
+                            const length = Math.sqrt(dx * dx + dy * dy);
+                            if (length === 0) return;
+                            dirX = dx / length;
+                            dirY = dy / length;
+                        } else {
+                            // For end node, direction is from the rope towards segment.end
+                            const lastSeg = relevantSegment;
+                            const dx = lastSeg.end.x - lastSeg.start.x;
+                            const dy = lastSeg.end.y - lastSeg.start.y;
+                            const length = Math.sqrt(dx * dx + dy * dy);
+                            if (length === 0) return;
+                            dirX = dx / length;
+                            dirY = dy / length;
+                        }
+                    } else {
+                        // Fallback to direct node-to-node direction
+                        const dx = endNode.position.x - startNode.position.x;
+                        const dy = endNode.position.y - startNode.position.y;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        if (length === 0) return;
+                        dirX = dx / length;
+                        dirY = dy / length;
+                    }
+                } else {
+                    // For springs and other edges, use direct node-to-node direction
+                    const dx = endNode.position.x - startNode.position.x;
+                    const dy = endNode.position.y - startNode.position.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    if (length === 0) return;
+                    dirX = dx / length;
+                    dirY = dy / length;
+                }
 
                 if (edge.type === 'rope') {
                     const tensionIdx = unknownIndex.get(`T_${edge.id}`);
@@ -102,8 +141,10 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
 
     // Add pulley constraints: For massless, frictionless pulleys, tensions on both sides are equal
     graph.nodes.forEach((node) => {
-        const pulleyComponent = system.components.find(c => c.id === node.id && c.type === 'pulley');
-        if (pulleyComponent && pulleyComponent.type === 'pulley' && pulleyComponent.fixed) {
+        const pulleyComponent = system.components.find(c => c.id === node.id && (c.type === 'pulley' || c.type === 'spring_pulley'));
+        
+        // Only fixed pulleys have equal tension constraint
+        if (pulleyComponent && pulleyComponent.type === 'pulley') {
             // Find all ropes connected to this pulley
             const connectedRopes: string[] = [];
             graph.edges.forEach((edge) => {
@@ -126,6 +167,9 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 }
             }
         }
+        
+        // Spring pulleys are movable, no equal tension constraint
+        // They're handled by force balance equations like masses
     });
 
     return { A: equations, b: constants, unknowns };

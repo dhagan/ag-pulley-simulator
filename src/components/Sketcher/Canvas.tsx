@@ -3,6 +3,7 @@ import { useSystemStore } from '../../store/useSystemStore';
 import { Grid } from './Grid';
 import { Anchor } from './ComponentLibrary/Anchor';
 import { Pulley } from './ComponentLibrary/Pulley';
+import { SpringPulley } from './ComponentLibrary/SpringPulley';
 import { Mass } from './ComponentLibrary/Mass';
 import { Rope } from './ComponentLibrary/Rope';
 import { Spring } from './ComponentLibrary/Spring';
@@ -165,6 +166,18 @@ export const Canvas: React.FC = () => {
                         position: snappedPos,
                         radius: 30,
                         fixed: true,
+                    };
+                    break;
+                case Tool.ADD_SPRING_PULLEY:
+                    newComponent = {
+                        id: generateId('spring_pulley'),
+                        type: ComponentType.SPRING_PULLEY,
+                        position: snappedPos,
+                        radius: 30,
+                        stiffness: 100,
+                        restLength: 100,
+                        currentLength: 100,
+                        axis: 'vertical',
                     };
                     break;
                 case Tool.ADD_MASS:
@@ -337,6 +350,8 @@ export const Canvas: React.FC = () => {
                 return <Anchor key={component.id} anchor={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.PULLEY:
                 return <Pulley key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
+            case ComponentType.SPRING_PULLEY:
+                return <SpringPulley key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.MASS:
                 return <Mass key={component.id} mass={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.ROPE:
@@ -452,6 +467,7 @@ export const Canvas: React.FC = () => {
                     {[
                         { type: ComponentType.ANCHOR, label: 'Anchor', icon: '⚓' },
                         { type: ComponentType.PULLEY, label: 'Pulley', icon: '⭕' },
+                        { type: ComponentType.SPRING_PULLEY, label: 'Spring Pulley', icon: '🔧' },
                         { type: ComponentType.MASS, label: 'Mass', icon: '⚖️' },
                         { type: ComponentType.SPRING, label: 'Spring', icon: '🌀' },
                         { type: ComponentType.ROPE, label: 'Rope', icon: '〰️' },

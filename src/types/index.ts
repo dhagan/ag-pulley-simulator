@@ -5,6 +5,7 @@
 export enum ComponentType {
     ANCHOR = 'anchor',
     PULLEY = 'pulley',
+    SPRING_PULLEY = 'spring_pulley',
     ROPE = 'rope',
     SPRING = 'spring',
     MASS = 'mass',
@@ -28,11 +29,21 @@ export interface Anchor extends BaseComponent {
     fixed: true;
 }
 
-// Pulley: Rotatable wheel
+// Pulley: Fixed rotatable wheel (ideal, frictionless)
 export interface Pulley extends BaseComponent {
     type: ComponentType.PULLEY;
     radius: number;
-    fixed: boolean;
+    fixed: true; // Always fixed to wall/ceiling
+}
+
+// Spring Pulley: Pulley mounted on a spring
+export interface SpringPulley extends BaseComponent {
+    type: ComponentType.SPRING_PULLEY;
+    radius: number;
+    stiffness: number; // Spring constant (N/m)
+    restLength: number; // Spring rest length (px)
+    currentLength: number; // Current spring length (px)
+    axis: 'horizontal' | 'vertical'; // Direction of spring compression
 }
 
 // Rope: Idealized massless, inextensible string
@@ -81,7 +92,7 @@ export interface ForceVector extends BaseComponent {
     appliedToNodeId: string;
 }
 
-export type Component = Anchor | Pulley | Rope | Spring | Mass | ForceVector;
+export type Component = Anchor | Pulley | SpringPulley | Rope | Spring | Mass | ForceVector;
 
 // ============================================================================
 // Graph Representation
@@ -191,6 +202,7 @@ export enum Tool {
     PAN = 'pan',
     ADD_ANCHOR = 'add_anchor',
     ADD_PULLEY = 'add_pulley',
+    ADD_SPRING_PULLEY = 'add_spring_pulley',
     ADD_ROPE = 'add_rope',
     ADD_SPRING = 'add_spring',
     ADD_MASS = 'add_mass',
@@ -216,6 +228,7 @@ export interface UIState {
     showGrid: boolean;
     showForces: boolean;
     showFBD: boolean;
+    showLabels: boolean;
     animationEnabled: boolean;
 }
 

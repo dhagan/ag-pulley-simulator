@@ -129,19 +129,71 @@ export const PropertyEditor: React.FC = () => {
                                 radius: parseFloat(val) || 20
                             })}
                         />
+                    </>
+                )}
+                
+                {selectedComponent.type === ComponentType.SPRING_PULLEY && (
+                    <>
+                        <PropertyField 
+                            label="Radius" 
+                            value={selectedComponent.radius.toString()} 
+                            type="number"
+                            min={10}
+                            step={5}
+                            onChange={(val) => updateComponent(selectedComponent.id, {
+                                radius: parseFloat(val) || 20
+                            })}
+                        />
                         
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-                            <input
-                                type="checkbox"
-                                checked={selectedComponent.fixed}
-                                onChange={(e) => updateComponent(selectedComponent.id, {
-                                    fixed: e.target.checked
-                                })}
-                                style={{ cursor: 'pointer' }}
-                            />
-                            <label style={{ fontSize: '0.875rem', cursor: 'pointer' }}>
-                                Fixed Position
+                        <PropertyField 
+                            label="Spring Stiffness (N/m)" 
+                            value={selectedComponent.stiffness.toString()} 
+                            type="number"
+                            min={1}
+                            step={10}
+                            onChange={(val) => updateComponent(selectedComponent.id, {
+                                stiffness: parseFloat(val) || 100
+                            })}
+                        />
+                        
+                        <PropertyField 
+                            label="Rest Length (px)" 
+                            value={selectedComponent.restLength.toString()} 
+                            type="number"
+                            min={10}
+                            step={10}
+                            onChange={(val) => updateComponent(selectedComponent.id, {
+                                restLength: parseFloat(val) || 100
+                            })}
+                        />
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ 
+                                fontSize: '0.75rem', 
+                                color: 'var(--color-text-secondary)', 
+                                fontWeight: 500 
+                            }}>
+                                Spring Axis
                             </label>
+                            <select
+                                value={selectedComponent.axis}
+                                onChange={(e) => updateComponent(selectedComponent.id, {
+                                    axis: e.target.value as 'horizontal' | 'vertical'
+                                })}
+                                style={{
+                                    padding: '6px 10px',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    color: 'var(--color-text)',
+                                    fontSize: '0.875rem',
+                                    fontFamily: 'inherit',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <option value="vertical">Vertical</option>
+                                <option value="horizontal">Horizontal</option>
+                            </select>
                         </div>
                     </>
                 )}
@@ -281,6 +333,7 @@ function getComponentTypeName(type: ComponentType): string {
     const names: Record<ComponentType, string> = {
         [ComponentType.ANCHOR]: 'Anchor',
         [ComponentType.PULLEY]: 'Pulley',
+        [ComponentType.SPRING_PULLEY]: 'Spring Pulley',
         [ComponentType.MASS]: 'Mass',
         [ComponentType.ROPE]: 'Rope',
         [ComponentType.SPRING]: 'Spring',
@@ -293,6 +346,7 @@ function getComponentIcon(type: ComponentType): string {
     const icons: Record<ComponentType, string> = {
         [ComponentType.ANCHOR]: '⚓',
         [ComponentType.PULLEY]: '⭕',
+        [ComponentType.SPRING_PULLEY]: '🔧',
         [ComponentType.MASS]: '⚖️',
         [ComponentType.ROPE]: '〰️',
         [ComponentType.SPRING]: '〜',

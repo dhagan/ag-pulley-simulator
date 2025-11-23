@@ -33,6 +33,7 @@ interface SystemStore {
     toggleSnapToGrid: () => void;
     toggleShowForces: () => void;
     toggleFBD: () => void;
+    toggleLabels: () => void;
     setRopeStartNode: (nodeId: string | null) => void;
     updateGraph: () => void;
     solve: () => void;
@@ -62,6 +63,7 @@ const initialUIState: UIState = {
     showGrid: true,
     showForces: true,
     showFBD: false,
+    showLabels: true,
     animationEnabled: false,
 };
 
@@ -112,6 +114,8 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
     toggleShowForces: () => set((state) => ({ ui: { ...state.ui, showForces: !state.ui.showForces } })),
 
     toggleFBD: () => set((state) => ({ ui: { ...state.ui, showFBD: !state.ui.showFBD } })),
+
+    toggleLabels: () => set((state) => ({ ui: { ...state.ui, showLabels: !state.ui.showLabels } })),
 
     setRopeStartNode: (nodeId) => set({ ropeStartNodeId: nodeId }),
 
@@ -245,7 +249,23 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
                 );
                 return components;
             },
-            // Scenario 7: Three masses in series
+            // Scenario 7: Spring Pulley with two masses (NEW)
+            () => {
+                const components: Component[] = [
+                    { id: generateId('spring_pulley'), type: ComponentType.SPRING_PULLEY, position: { x: 0, y: 0 }, radius: 30, stiffness: 50, restLength: 100, currentLength: 100, axis: 'vertical' },
+                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -100, y: 150 }, mass: 8 },
+                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 100, y: 150 }, mass: 12 },
+                ];
+                const springPulley = components[0];
+                const mass1 = components[1];
+                const mass2 = components[2];
+                components.push(
+                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -50, y: 75 }, startNodeId: mass1.id, endNodeId: springPulley.id, length: 180, segments: [] },
+                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 50, y: 75 }, startNodeId: springPulley.id, endNodeId: mass2.id, length: 180, segments: [] }
+                );
+                return components;
+            },
+            // Scenario 8: Three masses in series
             () => {
                 const components: Component[] = [
                     { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 0, y: -200 }, fixed: true },

@@ -8,12 +8,13 @@ export const Toolbar: React.FC = () => {
     const toggleGrid = useSystemStore((state) => state.toggleGrid);
     const toggleSnapToGrid = useSystemStore((state) => state.toggleSnapToGrid);
     const toggleFBD = useSystemStore((state) => state.toggleFBD);
+    const toggleLabels = useSystemStore((state) => state.toggleLabels);
     const showGrid = useSystemStore((state) => state.ui.showGrid);
     const showFBD = useSystemStore((state) => state.ui.showFBD);
+    const showLabels = useSystemStore((state) => state.ui.showLabels);
     const snapToGrid = useSystemStore((state) => state.ui.canvas.snapToGrid);
     const reset = useSystemStore((state) => state.reset);
     const undo = useSystemStore((state) => state.undo);
-    const createSimpleTest = useSystemStore((state) => state.createSimpleTest);
     const hasHistory = useSystemStore((state) => state.history.length > 0);
 
     const toolButtons = [
@@ -21,6 +22,7 @@ export const Toolbar: React.FC = () => {
         { tool: Tool.PAN, label: 'Pan', icon: '✋' },
         { tool: Tool.ADD_ANCHOR, label: 'Anchor', icon: '📌' },
         { tool: Tool.ADD_PULLEY, label: 'Pulley', icon: '⚙️' },
+        { tool: Tool.ADD_SPRING_PULLEY, label: 'Spring Pulley', icon: '🔧' },
         { tool: Tool.ADD_MASS, label: 'Mass', icon: '📦' },
         { tool: Tool.ADD_ROPE, label: 'Rope', icon: '🪢' },
         { tool: Tool.ADD_SPRING, label: 'Spring', icon: '🌀' },
@@ -61,7 +63,7 @@ export const Toolbar: React.FC = () => {
                     color: 'var(--color-accent-blue)',
                     fontWeight: 600,
                 }}>
-                    v1.0.0
+                    v1.2.0
                 </div>
             </div>
 
@@ -107,6 +109,9 @@ export const Toolbar: React.FC = () => {
                 <button onClick={toggleFBD} className={showFBD ? 'selected' : ''} title="Show Free Body Diagrams">
                     FBD {showFBD ? '✓' : '✗'}
                 </button>
+                <button onClick={toggleLabels} className={showLabels ? 'selected' : ''} title="Show Component Labels">
+                    Labels {showLabels ? '✓' : '✗'}
+                </button>
             </div>
 
             <div
@@ -117,14 +122,6 @@ export const Toolbar: React.FC = () => {
                     margin: '0 var(--spacing-sm)',
                 }}
             />
-
-            <button
-                className="primary"
-                onClick={createSimpleTest}
-                title="Simple mass hanging from anchor"
-            >
-                📏 Simple
-            </button>
 
             <button
                 onClick={undo}
