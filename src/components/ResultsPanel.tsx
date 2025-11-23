@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSystemStore } from '../store/useSystemStore';
+import { buildGraph } from '../utils/graph-builder';
+import { buildEquationSystem } from '../solver/equation-builder';
 
 export const ResultsPanel: React.FC = () => {
     const solverResult = useSystemStore((state) => state.solverResult);
     const solve = useSystemStore((state) => state.solve);
     const components = useSystemStore((state) => state.system.components);
+    const system = useSystemStore((state) => state.system);
+    const [showEquations, setShowEquations] = useState(false);
+
+    // Build equation system for display
+    let equationSystem: any = null;
+    let graph: any = null;
+    try {
+        graph = buildGraph(system);
+        equationSystem = buildEquationSystem(graph, system);
+    } catch (e) {
+        console.error('Error building equations:', e);
+    }
+
+    const numUnknowns = equationSystem?.unknowns?.length || 0;
+    const numEquations = equationSystem?.A?.length || 0;
+    const isOverconstrained = numEquations > numUnknowns;
+    const isUnderconstrained = numEquations < numUnknowns;
 
     return (
         <div
@@ -60,6 +79,134 @@ export const ResultsPanel: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Equation System Diagnostics */}
+            {equationSystem && (
+                <>
+                    <div style={{ width: '100%', height: '1px', background: 'var(--color-border)' }} />
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>
+                                Equation System
+                            </h3>
+                            <button
+                                onClick={() => setShowEquations(!showEquations)}
+                                style={{
+                                    background: 'transparent',
+                                    border: '1px solid var(--color-border)',
+                                    color: 'var(--color-text)',
+                                    padding: '4px 8px',
+                                    cursor: 'pointer',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem',
+                                }}
+                            >
+                                {showEquations ? 'Hide' : 'Show'} Details
+                            </button>
+                        </div>
+
+                        <div className="font-mono text-sm" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span className="text-secondary">Unknowns:</span>
+                                <span>{numUnknowns}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span className="text-secondary">Equations:</span>
+                                <span style={{ color: isOverconstrained ? 'var(--color-accent-red)' : isUnderconstrained ? 'var(--color-accent-yellow)' : 'inherit' }}>
+                                    {numEquations}
+                                </span>
+                            </div>
+                            {isOverconstrained && (
+                                <div style={{
+                                    padding: '8px',
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    border: '1px solid var(--color-accent-red)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem'
+                                }}>
+                                    ⚠️ OVERCONSTRAINED: {numEquations - numUnknowns} extra equation(s)
+                                </div>
+                            )}
+                            {isUnderconstrained && (
+                                <div style={{
+                                    padding: '8px',
+                                    background: 'rgba(234, 179, 8, 0.1)',
+                                    border: '1px solid var(--color-accent-yellow)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem'
+                                }}>
+                                    ⚠️ UNDERCONSTRAINED: Need {numUnknowns - numEquations} more equation(s)
+                                </div>
+                            )}
+                        </div>
+
+                        {showEquations && equationSystem && (
+                            <div style={{ marginTop: 'var(--spacing-sm)', fontSize: '0.7rem' }}>
+                                <div style={{ marginBottom: 'var(--spacing-xs)' }}>
+                                    <strong>Unknowns:</strong>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                                        {equationSystem.unknowns.map((u: string, i: number) => (
+                                            <span key={i} style={{
+                                                background: 'rgba(59, 130, 246, 0.2)',
+                                                padding: '2px 6px',
+                                                borderRadius: '3px',
+                                                fontFamily: 'monospace'
+                                            }}>
+                                                {u}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 'var(--spacing-sm)' }}>
+                                    <strong>Equations (A·x = b):</strong>
+                                    <div style={{
+                                        marginTop: '4px',
+                                        maxHeight: '200px',
+                                        overflowY: 'auto',
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.65rem',
+                                        background: 'rgba(0,0,0,0.3)',
+                                        padding: '8px',
+                                        borderRadius: '4px'
+                                    }}>
+                                        {equationSystem.A.map((row: number[], i: number) => (
+                                            <div key={i} style={{ marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'auto' }}>
+                                                {row.map((coef, j) => {
+                                                    if (Math.abs(coef) < 0.001) return null;
+                                                    const sign = coef > 0 && row.slice(0, j).some(c => Math.abs(c) >= 0.001) ? '+ ' : '';
+                                                    return (
+                                                        <span key={j}>
+                                                            {sign}{coef.toFixed(2)}·{equationSystem.unknowns[j]}{' '}
+                                                        </span>
+                                                    );
+                                                }).filter(Boolean).length > 0 ? (
+                                                    <>
+                                                        {row.map((coef, j) => {
+                                                            if (Math.abs(coef) < 0.001) return null;
+                                                            const sign = coef > 0 && row.slice(0, j).some(c => Math.abs(c) >= 0.001) ? '+ ' : '';
+                                                            return (
+                                                                <span key={j}>
+                                                                    {sign}{coef.toFixed(2)}·{equationSystem.unknowns[j]}{' '}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                        = {equationSystem.b[i].toFixed(2)}
+                                                    </>
+                                                ) : (
+                                                    <span style={{ color: 'var(--color-text-secondary)' }}>
+                                                        0 = {equationSystem.b[i].toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
 
             {/* Solver Results */}
             {solverResult && (
