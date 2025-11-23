@@ -7,7 +7,9 @@ export const Toolbar: React.FC = () => {
     const setTool = useSystemStore((state) => state.setTool);
     const toggleGrid = useSystemStore((state) => state.toggleGrid);
     const toggleSnapToGrid = useSystemStore((state) => state.toggleSnapToGrid);
+    const toggleFBD = useSystemStore((state) => state.toggleFBD);
     const showGrid = useSystemStore((state) => state.ui.showGrid);
+    const showFBD = useSystemStore((state) => state.ui.showFBD);
     const snapToGrid = useSystemStore((state) => state.ui.canvas.snapToGrid);
     const reset = useSystemStore((state) => state.reset);
     const undo = useSystemStore((state) => state.undo);
@@ -72,6 +74,9 @@ export const Toolbar: React.FC = () => {
                 </button>
                 <button onClick={toggleSnapToGrid} className={snapToGrid ? 'selected' : ''}>
                     Snap {snapToGrid ? '✓' : '✗'}
+                </button>
+                <button onClick={toggleFBD} className={showFBD ? 'selected' : ''} title="Show Free Body Diagrams">
+                    FBD {showFBD ? '✓' : '✗'}
                 </button>
             </div>
 

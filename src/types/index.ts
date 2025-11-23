@@ -187,5 +187,7 @@ export interface UIState {
     canvas: CanvasState;
     showGrid: boolean;
     showForces: boolean;
+    showFBD: boolean;
     animationEnabled: boolean;
 }
+

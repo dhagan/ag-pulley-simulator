@@ -12,6 +12,8 @@ import {
     Rope,
 } from '../types';
 import { generateId, distance } from '../utils/math';
+import { buildGraph } from '../utils/graph-builder';
+import { solvePulleySystem } from '../solver';
 
 interface SystemStore {
     system: SystemState;
@@ -30,6 +32,7 @@ interface SystemStore {
     toggleGrid: () => void;
     toggleSnapToGrid: () => void;
     toggleShowForces: () => void;
+    toggleFBD: () => void;
     setRopeStartNode: (nodeId: string | null) => void;
     updateGraph: () => void;
     solve: () => void;
@@ -48,9 +51,15 @@ const initialSystemState: SystemState = {
 const initialUIState: UIState = {
     currentTool: Tool.SELECT,
     selectedComponentId: null,
-    canvas: { viewBox: { x: -500, y: -500, width: 1000, height: 1000 }, gridSize: 20, snapToGrid: true, zoom: 1 },
+    canvas: {
+        viewBox: { x: -400, y: -300, width: 800, height: 600 },
+        gridSize: 20,
+        snapToGrid: true,
+        zoom: 1,
+    },
     showGrid: true,
     showForces: true,
+    showFBD: false,
     animationEnabled: false,
 };
 
@@ -81,7 +90,7 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
     updateComponent: (id, updates) => {
         set((state) => ({
             history: [...state.history, state.system],
-            system: { ...state.system, components: state.system.components.map((c) => c.id === id ? { ...c, ...updates } : c) },
+            system: { ...state.system, components: state.system.components.map((c) => c.id === id ? { ...c, ...updates } as Component : c) },
         }));
         get().updateGraph();
     },
@@ -100,17 +109,17 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
 
     toggleShowForces: () => set((state) => ({ ui: { ...state.ui, showForces: !state.ui.showForces } })),
 
+    toggleFBD: () => set((state) => ({ ui: { ...state.ui, showFBD: !state.ui.showFBD } })),
+
     setRopeStartNode: (nodeId) => set({ ropeStartNodeId: nodeId }),
 
     updateGraph: () => {
-        const { buildGraph } = require('../utils/graph-builder');
         set((state) => ({ system: { ...state.system, graph: buildGraph(get().system) } }));
     },
 
     solve: () => {
         console.log('🔍 SOLVE: Starting...');
         get().updateGraph();
-        const { solvePulleySystem } = require('../solver');
         const system = get().system;
         console.log('🔍 Components:', system.components.map(c => ({ id: c.id, type: c.type })));
         const result = solvePulleySystem(system);
@@ -139,7 +148,7 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
             type: ComponentType.PULLEY,
             position: { x: 0, y: -250 },
             radius: 30,
-            fixed: false,
+            fixed: true,  // Changed to fixed to avoid overconstrained system
         };
         components.push(pulley);
 
