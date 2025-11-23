@@ -80,10 +80,20 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 }
             });
 
-            equations.push(eqX);
-            constants.push(constX);
-            equations.push(eqY);
-            constants.push(constY);
+            // Only add equations if they are non-trivial (not all coefficients are zero)
+            // This prevents overconstrained systems from trivial equations like "0 = 0"
+            const isXTrivial = eqX.every(c => c === 0) && constX === 0;
+            const isYTrivial = eqY.every(c => c === 0) && constY === 0;
+
+            if (!isXTrivial) {
+                equations.push(eqX);
+                constants.push(constX);
+            }
+
+            if (!isYTrivial) {
+                equations.push(eqY);
+                constants.push(constY);
+            }
         }
     });
 

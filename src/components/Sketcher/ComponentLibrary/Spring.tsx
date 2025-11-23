@@ -5,7 +5,7 @@ import { distance } from '../../../utils/math';
 interface SpringProps {
     spring: SpringType;
     isSelected: boolean;
-    onClick: () => void;
+    onClick?: () => void;
     startPos: { x: number; y: number };
     endPos: { x: number; y: number };
 }
@@ -52,8 +52,8 @@ export const Spring: React.FC<SpringProps> = ({ spring, isSelected, onClick, sta
 
     return (
         <g
-            onClick={onClick}
-            style={{ cursor: 'pointer' }}
+            onClick={onClick ? () => onClick() : undefined}
+            style={{ cursor: onClick ? 'pointer' : 'default' }}
             className="spring"
         >
             {/* Spring path */}
