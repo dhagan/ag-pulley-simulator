@@ -35,11 +35,20 @@ export function buildGraph(system: SystemState): Graph {
                 break;
 
             case ComponentType.PULLEY_BECKET:
+                // Main pulley node
                 nodes.set(component.id, {
                     id: component.id,
                     componentId: component.id,
                     position: component.position,
                     isFixed: true, // Fixed pulleys with becket are always fixed
+                    mass: 0,
+                });
+                // Becket attachment point (below the pulley)
+                nodes.set(`${component.id}_becket`, {
+                    id: `${component.id}_becket`,
+                    componentId: component.id,
+                    position: { x: component.position.x, y: component.position.y + component.radius + 12 },
+                    isFixed: true, // Becket is rigidly attached to pulley
                     mass: 0,
                 });
                 break;
@@ -55,12 +64,21 @@ export function buildGraph(system: SystemState): Graph {
                 break;
 
             case ComponentType.SPRING_PULLEY_BECKET:
+                // Main pulley node
                 nodes.set(component.id, {
                     id: component.id,
                     componentId: component.id,
                     position: component.position,
                     isFixed: false, // Spring pulleys can move
                     mass: 0.5, // Small mass for the pulley itself
+                });
+                // Becket attachment point (below the pulley)
+                nodes.set(`${component.id}_becket`, {
+                    id: `${component.id}_becket`,
+                    componentId: component.id,
+                    position: { x: component.position.x, y: component.position.y + component.radius + 12 },
+                    isFixed: false, // Becket moves with the spring pulley
+                    mass: 0, // No additional mass for becket point
                 });
                 break;
 
@@ -181,10 +199,10 @@ export function validateGraph(graph: Graph, system: SystemState): { valid: boole
         }
     });
 
-    // Check that pulleys have exactly 2 rope connections
+    // Check that pulleys have exactly 2 rope connections (but becket points are separate)
     graph.nodes.forEach((_node, nodeId) => {
-        // Skip virtual anchor nodes
-        if (nodeId.endsWith('_anchor')) return;
+        // Skip virtual anchor nodes and becket nodes
+        if (nodeId.endsWith('_anchor') || nodeId.endsWith('_becket')) return;
         
         const component = system.components.find(c => c.id === nodeId);
         if (component && (component.type === ComponentType.PULLEY || component.type === ComponentType.SPRING_PULLEY || component.type === ComponentType.PULLEY_BECKET || component.type === ComponentType.SPRING_PULLEY_BECKET)) {
@@ -192,7 +210,7 @@ export function validateGraph(graph: Graph, system: SystemState): { valid: boole
                 (edge) => edge.type === 'rope' && (edge.startNodeId === nodeId || edge.endNodeId === nodeId)
             );
             if (ropeConnections.length !== 2) {
-                errors.push(`Pulley ${nodeId} must have exactly 2 rope connections (has ${ropeConnections.length})`);
+                errors.push(`Pulley ${nodeId} must have exactly 2 rope connections (has ${ropeConnections.length}). Becket is separate.`);
             }
         }
     });

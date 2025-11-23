@@ -121,18 +121,15 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
             });
 
             // Add force balance equations: ΣF = 0
-            // For each direction, only add if the force component is significant (> 1% of total)
-            const maxCoeffX = Math.max(...eqX.map(c => Math.abs(c)), Math.abs(constX));
-            const maxCoeffY = Math.max(...eqY.map(c => Math.abs(c)), Math.abs(constY));
+            // Always add equations for nodes with connected edges
+            const hasConnectedEdges = Array.from(graph.edges.values()).some(e => 
+                e.startNodeId === node.id || e.endNodeId === node.id
+            );
             
-            // Add X equation if there's meaningful X-direction force
-            if (maxCoeffX > 1.0) {
+            if (hasConnectedEdges) {
+                // Add both X and Y equations for any node with connections
                 equations.push(eqX);
                 constants.push(constX);
-            }
-            
-            // Add Y equation if there's meaningful Y-direction force
-            if (maxCoeffY > 1.0) {
                 equations.push(eqY);
                 constants.push(constY);
             }

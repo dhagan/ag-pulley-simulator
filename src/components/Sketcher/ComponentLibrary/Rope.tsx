@@ -36,10 +36,25 @@ export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
     const components = system.components;
     const ropeSegments = system.graph.ropeSegments;
 
-    const startComp = components.find(c => c.id === rope.startNodeId);
-    const endComp = components.find(c => c.id === rope.endNodeId);
+    // Handle both regular component IDs and becket node IDs
+    const getNodePosition = (nodeId: string) => {
+        // Check if it's a becket node
+        if (nodeId.endsWith('_becket')) {
+            const parentId = nodeId.replace('_becket', '');
+            const parentComp = components.find(c => c.id === parentId);
+            if (parentComp && 'radius' in parentComp) {
+                return { x: parentComp.position.x, y: parentComp.position.y + parentComp.radius + 12 };
+            }
+        }
+        // Regular component
+        const comp = components.find(c => c.id === nodeId);
+        return comp ? comp.position : null;
+    };
 
-    if (!startComp || !endComp) return null;
+    const startPos = getNodePosition(rope.startNodeId);
+    const endPos = getNodePosition(rope.endNodeId);
+
+    if (!startPos || !endPos) return null;
 
     // Use smart routing segments if available
     const segments = ropeSegments.get(rope.id);
@@ -71,19 +86,7 @@ export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
         );
     }
     
-    // Fallback to simple line rendering with tangent points
-    let startPos = startComp.position;
-    let endPos = endComp.position;
-
-    // For pulleys, calculate tangent point on circumference
-    if (startComp.type === ComponentType.PULLEY && 'radius' in startComp) {
-        startPos = getPulleyTangentPoint(startComp.position, startComp.radius, endComp.position);
-    }
-
-    if (endComp.type === ComponentType.PULLEY && 'radius' in endComp) {
-        endPos = getPulleyTangentPoint(endComp.position, endComp.radius, startComp.position);
-    }
-
+    // Fallback to simple line rendering
     return (
         <g onClick={onClick} style={{ cursor: 'pointer' }}>
             <line

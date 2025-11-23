@@ -425,6 +425,87 @@ export const Canvas: React.FC = () => {
                 <Grid gridSize={gridSize} viewBox={viewBox} />
                 {system.components.map(renderComponent)}
 
+                {/* Render becket attachment points when adding rope/spring */}
+                {(currentTool === Tool.ADD_ROPE || currentTool === Tool.ADD_SPRING) && system.components.map(component => {
+                    if (component.type === ComponentType.PULLEY_BECKET || component.type === ComponentType.SPRING_PULLEY_BECKET) {
+                        const becketNodeId = `${component.id}_becket`;
+                        const becketPos = { x: component.position.x, y: component.position.y + component.radius + 12 };
+                        const isSelected = ropeStartNodeId === becketNodeId;
+                        
+                        return (
+                            <g key={`${component.id}_becket_point`}>
+                                <circle
+                                    cx={becketPos.x}
+                                    cy={becketPos.y}
+                                    r={8}
+                                    fill={isSelected ? 'var(--color-accent-cyan)' : 'var(--color-mass)'}
+                                    stroke="var(--color-border)"
+                                    strokeWidth={2}
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (currentTool === Tool.ADD_ROPE) {
+                                            if (!ropeStartNodeId) {
+                                                setRopeStartNode(becketNodeId);
+                                            } else if (ropeStartNodeId !== becketNodeId) {
+                                                const startNodeId = ropeStartNodeId;
+                                                const startIsRegularComponent = system.components.find(c => c.id === startNodeId);
+                                                const startIsBecket = startNodeId.endsWith('_becket');
+                                                
+                                                let startPos = becketPos;
+                                                if (startIsRegularComponent) {
+                                                    startPos = startIsRegularComponent.position;
+                                                } else if (startIsBecket) {
+                                                    const parentId = startNodeId.replace('_becket', '');
+                                                    const parentComp = system.components.find(c => c.id === parentId);
+                                                    if (parentComp && 'radius' in parentComp) {
+                                                        startPos = { x: parentComp.position.x, y: parentComp.position.y + parentComp.radius + 12 };
+                                                    }
+                                                }
+                                                
+                                                const ropeLength = distance(startPos, becketPos);
+                                                const newRope: Component = {
+                                                    id: generateId('rope'),
+                                                    type: ComponentType.ROPE,
+                                                    position: {
+                                                        x: (startPos.x + becketPos.x) / 2,
+                                                        y: (startPos.y + becketPos.y) / 2,
+                                                    },
+                                                    startNodeId,
+                                                    endNodeId: becketNodeId,
+                                                    length: ropeLength,
+                                                    segments: [{
+                                                        start: startPos,
+                                                        end: becketPos,
+                                                        type: 'line' as const,
+                                                        length: ropeLength
+                                                    }],
+                                                };
+                                                addComponent(newRope);
+                                                setRopeStartNode(null);
+                                                setTool(Tool.SELECT);
+                                            }
+                                        }
+                                    }}
+                                />
+                                {isSelected && (
+                                    <circle
+                                        cx={becketPos.x}
+                                        cy={becketPos.y}
+                                        r={12}
+                                        fill="none"
+                                        stroke="var(--color-accent-cyan)"
+                                        strokeWidth={2}
+                                        strokeDasharray="4 4"
+                                        style={{ pointerEvents: 'none' }}
+                                    />
+                                )}
+                            </g>
+                        );
+                    }
+                    return null;
+                })}
+
                 <FBDLayer />
 
                 {/* Rope creation preview */}
