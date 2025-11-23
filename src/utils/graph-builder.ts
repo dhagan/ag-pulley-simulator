@@ -34,7 +34,27 @@ export function buildGraph(system: SystemState): Graph {
                 });
                 break;
 
+            case ComponentType.PULLEY_BECKET:
+                nodes.set(component.id, {
+                    id: component.id,
+                    componentId: component.id,
+                    position: component.position,
+                    isFixed: true, // Fixed pulleys with becket are always fixed
+                    mass: 0,
+                });
+                break;
+
             case ComponentType.SPRING_PULLEY:
+                nodes.set(component.id, {
+                    id: component.id,
+                    componentId: component.id,
+                    position: component.position,
+                    isFixed: false, // Spring pulleys can move
+                    mass: 0.5, // Small mass for the pulley itself
+                });
+                break;
+
+            case ComponentType.SPRING_PULLEY_BECKET:
                 nodes.set(component.id, {
                     id: component.id,
                     componentId: component.id,
@@ -98,7 +118,7 @@ export function buildGraph(system: SystemState): Graph {
 
     // Add internal springs for spring pulleys
     system.components.forEach((component) => {
-        if (component.type === ComponentType.SPRING_PULLEY) {
+        if (component.type === ComponentType.SPRING_PULLEY || component.type === ComponentType.SPRING_PULLEY_BECKET) {
             // Create virtual anchor point where spring is mounted
             const anchorId = `${component.id}_anchor`;
             const anchorPos = { ...component.position };
@@ -167,7 +187,7 @@ export function validateGraph(graph: Graph, system: SystemState): { valid: boole
         if (nodeId.endsWith('_anchor')) return;
         
         const component = system.components.find(c => c.id === nodeId);
-        if (component && (component.type === ComponentType.PULLEY || component.type === ComponentType.SPRING_PULLEY)) {
+        if (component && (component.type === ComponentType.PULLEY || component.type === ComponentType.SPRING_PULLEY || component.type === ComponentType.PULLEY_BECKET || component.type === ComponentType.SPRING_PULLEY_BECKET)) {
             const ropeConnections = Array.from(graph.edges.values()).filter(
                 (edge) => edge.type === 'rope' && (edge.startNodeId === nodeId || edge.endNodeId === nodeId)
             );

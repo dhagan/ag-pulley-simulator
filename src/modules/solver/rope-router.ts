@@ -1,4 +1,4 @@
-import { Point, RopeSegment, Pulley, SpringPulley, SystemState } from '../../types';
+import { Point, RopeSegment, Pulley, SpringPulley, PulleyBecket, SpringPulleyBecket, SystemState } from '../../types';
 
 /**
  * Smart Rope Routing Algorithm
@@ -6,7 +6,7 @@ import { Point, RopeSegment, Pulley, SpringPulley, SystemState } from '../../typ
  */
 
 export interface PulleyIntersection {
-    pulley: Pulley | SpringPulley;
+    pulley: Pulley | SpringPulley | PulleyBecket | SpringPulleyBecket;
     distance: number;
     intersectionPoint: Point;
     tangentEntry: Point;
@@ -32,7 +32,7 @@ export function calculateRopeSegments(
         const startComp = system.components.find(c => c.id === rope.startNodeId);
         const endComp = system.components.find(c => c.id === rope.endNodeId);
 
-        if ((startComp?.type === 'pulley' || startComp?.type === 'spring_pulley') && 'radius' in startComp) {
+        if ((startComp?.type === 'pulley' || startComp?.type === 'spring_pulley' || startComp?.type === 'pulley_becket' || startComp?.type === 'spring_pulley_becket') && 'radius' in startComp) {
             const angle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
             adjustedStart = {
                 x: startPoint.x + startComp.radius * Math.cos(angle),
@@ -40,7 +40,7 @@ export function calculateRopeSegments(
             };
         }
 
-        if ((endComp?.type === 'pulley' || endComp?.type === 'spring_pulley') && 'radius' in endComp) {
+        if ((endComp?.type === 'pulley' || endComp?.type === 'spring_pulley' || endComp?.type === 'pulley_becket' || endComp?.type === 'spring_pulley_becket') && 'radius' in endComp) {
             const angle = Math.atan2(startPoint.y - endPoint.y, startPoint.x - endPoint.x);
             adjustedEnd = {
                 x: endPoint.x + endComp.radius * Math.cos(angle),
@@ -49,7 +49,7 @@ export function calculateRopeSegments(
         }
     }
 
-    const pulleys = system.components.filter(c => c.type === 'pulley' || c.type === 'spring_pulley') as (Pulley | SpringPulley)[];
+    const pulleys = system.components.filter(c => c.type === 'pulley' || c.type === 'spring_pulley' || c.type === 'pulley_becket' || c.type === 'spring_pulley_becket') as (Pulley | SpringPulley | PulleyBecket | SpringPulleyBecket)[];
     
     // Find all pulleys that intersect with the direct path
     const intersectingPulleys = findIntermediatePulleys(adjustedStart, adjustedEnd, pulleys);
@@ -77,7 +77,7 @@ export function calculateRopeSegments(
 function findIntermediatePulleys(
     start: Point,
     end: Point,
-    pulleys: (Pulley | SpringPulley)[]
+    pulleys: (Pulley | SpringPulley | PulleyBecket | SpringPulleyBecket)[]
 ): PulleyIntersection[] {
     const intersections: PulleyIntersection[] = [];
     
@@ -177,7 +177,7 @@ function checkLineCircleIntersection(
 function calculateTangentPointsForRope(
     ropeStart: Point,
     ropeEnd: Point,
-    pulley: Pulley | SpringPulley
+    pulley: Pulley | SpringPulley | PulleyBecket | SpringPulleyBecket
 ): { entry: Point; exit: Point } | null {
     // Calculate tangent from rope start to pulley
     const tangentsFromStart = calculateTangentFromPointToCircle(

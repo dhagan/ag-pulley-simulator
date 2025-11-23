@@ -1,0 +1,56 @@
+{
+  "version": "1.3.0",
+  "name": "Scenario_8_Three_Masses_Series",
+  "description": "Three masses in series",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "anchor1",
+      "type": "anchor",
+      "position": { "x": 0, "y": -200 },
+      "fixed": true
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": { "x": 0, "y": -50 },
+      "mass": 3
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": { "x": 0, "y": 50 },
+      "mass": 5
+    },
+    {
+      "id": "mass3",
+      "type": "mass",
+      "position": { "x": 0, "y": 150 },
+      "mass": 7
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": { "x": 0, "y": -125 },
+      "startNodeId": "anchor1",
+      "endNodeId": "mass1",
+      "length": 150
+    },
+    {
+      "id": "rope2",
+      "type": "rope",
+      "position": { "x": 0, "y": 0 },
+      "startNodeId": "mass1",
+      "endNodeId": "mass2",
+      "length": 100
+    },
+    {
+      "id": "rope3",
+      "type": "rope",
+      "position": { "x": 0, "y": 100 },
+      "startNodeId": "mass2",
+      "endNodeId": "mass3",
+      "length": 100
+    }
+  ]
+}

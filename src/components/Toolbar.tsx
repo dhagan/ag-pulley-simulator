@@ -18,11 +18,13 @@ export const Toolbar: React.FC = () => {
     const hasHistory = useSystemStore((state) => state.history.length > 0);
 
     const toolButtons = [
-        { tool: Tool.SELECT, label: 'Select', icon: '⬆️' },
+        { tool: Tool.SELECT, label: 'Sel', icon: '⬆️' },
         { tool: Tool.PAN, label: 'Pan', icon: '✋' },
         { tool: Tool.ADD_ANCHOR, label: 'Anchor', icon: '📌' },
         { tool: Tool.ADD_PULLEY, label: 'Pulley', icon: '⚙️' },
-        { tool: Tool.ADD_SPRING_PULLEY, label: 'Spring Pulley', icon: '🔧' },
+        { tool: Tool.ADD_PULLEY_BECKET, label: 'P+Becket', icon: '🪝' },
+        { tool: Tool.ADD_SPRING_PULLEY, label: 'Spr-P', icon: '🔧' },
+        { tool: Tool.ADD_SPRING_PULLEY_BECKET, label: 'SP+Becket', icon: '⚙️' },
         { tool: Tool.ADD_MASS, label: 'Mass', icon: '📦' },
         { tool: Tool.ADD_ROPE, label: 'Rope', icon: '🪢' },
         { tool: Tool.ADD_SPRING, label: 'Spring', icon: '🌀' },
@@ -63,7 +65,7 @@ export const Toolbar: React.FC = () => {
                     color: 'var(--color-accent-blue)',
                     fontWeight: 600,
                 }}>
-                    v1.2.0
+                    v1.3.0
                 </div>
             </div>
 
@@ -77,11 +79,13 @@ export const Toolbar: React.FC = () => {
                         onClick={() => setTool(tool)}
                         title={label}
                         style={{
-                            minWidth: '80px',
+                            minWidth: '60px',
+                            padding: '4px 8px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 'var(--spacing-xs)',
+                            gap: '4px',
                             justifyContent: 'center',
+                            fontSize: '0.75rem',
                         }}
                     >
                         <span>{icon}</span>

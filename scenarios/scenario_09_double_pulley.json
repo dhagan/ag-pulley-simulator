@@ -1,0 +1,64 @@
+{
+  "version": "1.3.0",
+  "name": "Scenario_9_Double_Pulley",
+  "description": "Double pulley system",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "pulley1",
+      "type": "pulley",
+      "position": { "x": 0, "y": -200 },
+      "radius": 30,
+      "fixed": true
+    },
+    {
+      "id": "pulley2",
+      "type": "pulley",
+      "position": { "x": 150, "y": -200 },
+      "radius": 30,
+      "fixed": true
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": { "x": -80, "y": 100 },
+      "mass": 12
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": { "x": 80, "y": 100 },
+      "mass": 8
+    },
+    {
+      "id": "mass3",
+      "type": "mass",
+      "position": { "x": 200, "y": 100 },
+      "mass": 10
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": { "x": -40, "y": -50 },
+      "startNodeId": "mass1",
+      "endNodeId": "pulley1",
+      "length": 220
+    },
+    {
+      "id": "rope2",
+      "type": "rope",
+      "position": { "x": 65, "y": -50 },
+      "startNodeId": "pulley1",
+      "endNodeId": "mass2",
+      "length": 220
+    },
+    {
+      "id": "rope3",
+      "type": "rope",
+      "position": { "x": 175, "y": -50 },
+      "startNodeId": "mass3",
+      "endNodeId": "pulley2",
+      "length": 220
+    }
+  ]
+}

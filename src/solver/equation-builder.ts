@@ -141,10 +141,10 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
 
     // Add pulley constraints: For massless, frictionless pulleys, tensions on both sides are equal
     graph.nodes.forEach((node) => {
-        const pulleyComponent = system.components.find(c => c.id === node.id && (c.type === 'pulley' || c.type === 'spring_pulley'));
+        const pulleyComponent = system.components.find(c => c.id === node.id && (c.type === 'pulley' || c.type === 'spring_pulley' || c.type === 'pulley_becket' || c.type === 'spring_pulley_becket'));
         
         // Only fixed pulleys have equal tension constraint
-        if (pulleyComponent && pulleyComponent.type === 'pulley') {
+        if (pulleyComponent && (pulleyComponent.type === 'pulley' || pulleyComponent.type === 'pulley_becket')) {
             // Find all ropes connected to this pulley
             const connectedRopes: string[] = [];
             graph.edges.forEach((edge) => {

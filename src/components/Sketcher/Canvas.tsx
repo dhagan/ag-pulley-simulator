@@ -3,7 +3,9 @@ import { useSystemStore } from '../../store/useSystemStore';
 import { Grid } from './Grid';
 import { Anchor } from './ComponentLibrary/Anchor';
 import { Pulley } from './ComponentLibrary/Pulley';
+import { PulleyBecket } from './ComponentLibrary/PulleyBecket';
 import { SpringPulley } from './ComponentLibrary/SpringPulley';
+import { SpringPulleyBecket } from './ComponentLibrary/SpringPulleyBecket';
 import { Mass } from './ComponentLibrary/Mass';
 import { Rope } from './ComponentLibrary/Rope';
 import { Spring } from './ComponentLibrary/Spring';
@@ -168,10 +170,31 @@ export const Canvas: React.FC = () => {
                         fixed: true,
                     };
                     break;
+                case Tool.ADD_PULLEY_BECKET:
+                    newComponent = {
+                        id: generateId('pulley_becket'),
+                        type: ComponentType.PULLEY_BECKET,
+                        position: snappedPos,
+                        radius: 30,
+                        fixed: true,
+                    };
+                    break;
                 case Tool.ADD_SPRING_PULLEY:
                     newComponent = {
                         id: generateId('spring_pulley'),
                         type: ComponentType.SPRING_PULLEY,
+                        position: snappedPos,
+                        radius: 30,
+                        stiffness: 100,
+                        restLength: 100,
+                        currentLength: 100,
+                        axis: 'vertical',
+                    };
+                    break;
+                case Tool.ADD_SPRING_PULLEY_BECKET:
+                    newComponent = {
+                        id: generateId('spring_pulley_becket'),
+                        type: ComponentType.SPRING_PULLEY_BECKET,
                         position: snappedPos,
                         radius: 30,
                         stiffness: 100,
@@ -350,8 +373,12 @@ export const Canvas: React.FC = () => {
                 return <Anchor key={component.id} anchor={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.PULLEY:
                 return <Pulley key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
+            case ComponentType.PULLEY_BECKET:
+                return <PulleyBecket key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.SPRING_PULLEY:
                 return <SpringPulley key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
+            case ComponentType.SPRING_PULLEY_BECKET:
+                return <SpringPulleyBecket key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.MASS:
                 return <Mass key={component.id} mass={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.ROPE:
@@ -459,15 +486,17 @@ export const Canvas: React.FC = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '4px',
-                        minWidth: '150px',
+                        minWidth: '120px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
                     }}
                 >
-                    <div style={{ padding: '4px 8px', fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 'bold' }}>Add Component</div>
+                    <div style={{ padding: '2px 6px', fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: 'bold' }}>Add</div>
                     {[
                         { type: ComponentType.ANCHOR, label: 'Anchor', icon: '⚓' },
                         { type: ComponentType.PULLEY, label: 'Pulley', icon: '⭕' },
-                        { type: ComponentType.SPRING_PULLEY, label: 'Spring Pulley', icon: '🔧' },
+                        { type: ComponentType.PULLEY_BECKET, label: 'P+Becket', icon: '🪝' },
+                        { type: ComponentType.SPRING_PULLEY, label: 'Spr-P', icon: '🔧' },
+                        { type: ComponentType.SPRING_PULLEY_BECKET, label: 'SP+Becket', icon: '⚙️' },
                         { type: ComponentType.MASS, label: 'Mass', icon: '⚖️' },
                         { type: ComponentType.SPRING, label: 'Spring', icon: '🌀' },
                         { type: ComponentType.ROPE, label: 'Rope', icon: '〰️' },
