@@ -13,7 +13,6 @@ export const Toolbar: React.FC = () => {
     const snapToGrid = useSystemStore((state) => state.ui.canvas.snapToGrid);
     const reset = useSystemStore((state) => state.reset);
     const undo = useSystemStore((state) => state.undo);
-    const createTestSystem = useSystemStore((state) => state.createTestSystem);
     const createSimpleTest = useSystemStore((state) => state.createSimpleTest);
     const hasHistory = useSystemStore((state) => state.history.length > 0);
 
@@ -32,13 +31,42 @@ export const Toolbar: React.FC = () => {
         <div
             className="glass"
             style={{
-                padding: 'var(--spacing-md)',
+                padding: 'var(--spacing-sm)',
                 display: 'flex',
                 gap: 'var(--spacing-sm)',
                 flexWrap: 'wrap',
                 alignItems: 'center',
+                justifyContent: 'space-between',
             }}
         >
+            {/* Left side - Title and Version */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+                <h1 style={{
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, var(--color-accent-blue), var(--color-accent-cyan))',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    margin: 0,
+                }}>
+                    Pulley System Analyzer
+                </h1>
+                <div style={{
+                    padding: '4px 8px',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid var(--color-accent-blue)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.75rem',
+                    color: 'var(--color-accent-blue)',
+                    fontWeight: 600,
+                }}>
+                    v1.0.0
+                </div>
+            </div>
+
+            {/* Right side - Tools and controls */}
+            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
                 {toolButtons.map(({ tool, label, icon }) => (
                     <button
@@ -92,14 +120,6 @@ export const Toolbar: React.FC = () => {
 
             <button
                 className="primary"
-                onClick={createTestSystem}
-                title="Create a simple test system and solve it"
-            >
-                🧪 Test
-            </button>
-
-            <button
-                className="primary"
                 onClick={createSimpleTest}
                 title="Simple mass hanging from anchor"
             >
@@ -121,6 +141,7 @@ export const Toolbar: React.FC = () => {
             <button onClick={reset} style={{ background: 'var(--color-accent-red)', color: 'white' }}>
                 Reset
             </button>
+            </div>
         </div>
     );
 };

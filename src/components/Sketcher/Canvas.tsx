@@ -39,6 +39,23 @@ export const Canvas: React.FC = () => {
         return () => window.removeEventListener('click', handleClick);
     }, []);
 
+    // Handle ESC key to cancel operations
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setIsDragging(false);
+                setDraggedComponentId(null);
+                setIsPanning(false);
+                setRopeStartNode(null);
+                if (currentTool === Tool.ADD_ROPE || currentTool === Tool.ADD_SPRING) {
+                    setTool(Tool.SELECT);
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentTool, setTool, setRopeStartNode]);
+
     const screenToSVG = (screenX: number, screenY: number): Point => {
         if (!svgRef.current) return { x: 0, y: 0 };
         const svg = svgRef.current;
@@ -110,10 +127,15 @@ export const Canvas: React.FC = () => {
             selectComponent(newComponent.id);
         }
 
-        // Special handling for Rope tool - just switch to it
+        // Special handling for Rope and Spring tools - just switch to the tool
         if (type === ComponentType.ROPE) {
             setTool(Tool.ADD_ROPE);
         }
+        if (type === ComponentType.SPRING) {
+            setTool(Tool.ADD_SPRING);
+        }
+
+        setContextMenu({ ...contextMenu, visible: false });
     };
 
     const handleMouseDown: React.MouseEventHandler<SVGSVGElement> = (e) => {
@@ -270,6 +292,33 @@ export const Canvas: React.FC = () => {
                         setTool(Tool.SELECT); // Reset tool after adding rope
                     }
                 }
+            } else if (currentTool === Tool.ADD_SPRING) {
+                if (!ropeStartNodeId) {
+                    setRopeStartNode(component.id);
+                    selectComponent(component.id);
+                } else if (ropeStartNodeId !== component.id) {
+                    const startComp = system.components.find(c => c.id === ropeStartNodeId);
+                    if (startComp) {
+                        const springLength = distance(startComp.position, component.position);
+                        const newSpring: Component = {
+                            id: generateId('spring'),
+                            type: ComponentType.SPRING,
+                            position: {
+                                x: (startComp.position.x + component.position.x) / 2,
+                                y: (startComp.position.y + component.position.y) / 2,
+                            },
+                            startNodeId: ropeStartNodeId,
+                            endNodeId: component.id,
+                            restLength: springLength,
+                            stiffness: 100,
+                            currentLength: springLength,
+                        };
+                        addComponent(newSpring);
+                        setRopeStartNode(null);
+                        selectComponent(null);
+                        setTool(Tool.SELECT); // Reset tool after adding spring
+                    }
+                }
             } else {
                 selectComponent(component.id);
             }
@@ -293,17 +342,17 @@ export const Canvas: React.FC = () => {
             case ComponentType.ROPE:
                 return <Rope key={component.id} rope={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.SPRING:
-                const startNode = system.components.find(c => c.id === component.startNodeId);
-                const endNode = system.components.find(c => c.id === component.endNodeId);
-                if (!startNode || !endNode) return null;
+                const startNodeSpring = system.components.find(c => c.id === component.startNodeId);
+                const endNodeSpring = system.components.find(c => c.id === component.endNodeId);
+                if (!startNodeSpring || !endNodeSpring) return null;
                 return (
                     <Spring
                         key={component.id}
                         spring={component}
                         isSelected={isSelected}
                         onClick={handleClick}
-                        startPos={startNode.position}
-                        endPos={endNode.position}
+                        startPos={startNodeSpring.position}
+                        endPos={endNodeSpring.position}
                     />
                 );
             case ComponentType.FORCE_VECTOR:
@@ -357,6 +406,28 @@ export const Canvas: React.FC = () => {
                     }
                     return null;
                 })()}
+
+                {/* Spring creation preview */}
+                {ropeStartNodeId && currentTool === Tool.ADD_SPRING && (() => {
+                    const startComp = system.components.find(c => c.id === ropeStartNodeId);
+                    if (startComp) {
+                        return (
+                            <circle
+                                cx={startComp.position.x}
+                                cy={startComp.position.y}
+                                r={40}
+                                fill="none"
+                                stroke="var(--color-spring)"
+                                strokeWidth={2}
+                                strokeDasharray="8,4"
+                                style={{ pointerEvents: 'none' }}
+                            >
+                                <animate attributeName="r" from="30" to="50" dur="1s" repeatCount="indefinite" />
+                            </circle>
+                        );
+                    }
+                    return null;
+                })()}
             </svg>
 
             {/* Context Menu */}
@@ -382,7 +453,8 @@ export const Canvas: React.FC = () => {
                         { type: ComponentType.ANCHOR, label: 'Anchor', icon: '⚓' },
                         { type: ComponentType.PULLEY, label: 'Pulley', icon: '⭕' },
                         { type: ComponentType.MASS, label: 'Mass', icon: '⚖️' },
-                        { type: ComponentType.ROPE, label: 'Rope Tool', icon: '〰️' },
+                        { type: ComponentType.SPRING, label: 'Spring', icon: '🌀' },
+                        { type: ComponentType.ROPE, label: 'Rope', icon: '〰️' },
                         { type: ComponentType.FORCE_VECTOR, label: 'Force', icon: '➡️' },
                     ].map((item) => (
                         <button

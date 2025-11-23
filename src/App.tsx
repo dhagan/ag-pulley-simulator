@@ -3,6 +3,7 @@ import { Canvas } from './components/Sketcher/Canvas';
 import { Toolbar } from './components/Toolbar';
 import { ResultsPanel } from './components/ResultsPanel';
 import { PropertyEditor } from './components/PropertyEditor';
+import { TestScenarios } from './components/TestScenarios';
 import { AnimatorControls } from './modules/animator';
 
 function App() {
@@ -17,39 +18,6 @@ function App() {
                 padding: 'var(--spacing-md)',
             }}
         >
-            {/* Header */}
-            <header
-                className="glass"
-                style={{
-                    padding: 'var(--spacing-md)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <div>
-                    <h1
-                        style={{
-                            fontSize: '1.5rem',
-                            fontWeight: 700,
-                            background: 'linear-gradient(135deg, var(--color-accent-blue), var(--color-accent-cyan))',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                        }}
-                    >
-                        Pulley System Analysis Tool
-                    </h1>
-                    <p className="text-sm text-secondary">
-                        Engineering Analysis • Analytical Solver • SVG Precision
-                    </p>
-                </div>
-
-                <div className="font-mono text-xs text-muted">
-                    v2.0.0-alpha • PSAT
-                </div>
-            </header>
-
             {/* Toolbar */}
             <Toolbar />
 
@@ -63,13 +31,15 @@ function App() {
                     minHeight: 0,
                 }}
             >
-                {/* Left Sidebar - Properties & Animation */}
+                {/* Left Sidebar - Test Scenarios & Properties */}
                 <div style={{ 
                     display: 'flex', 
-                    flexDirection: 'column', 
+                    flexDirection: 'column',
                     gap: 'var(--spacing-md)',
+                    minHeight: 0,
                     overflowY: 'auto'
                 }}>
+                    <TestScenarios />
                     <PropertyEditor />
                     <AnimatorControls />
                 </div>

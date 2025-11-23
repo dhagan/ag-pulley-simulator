@@ -7,12 +7,7 @@ export const FBDLayer: React.FC = () => {
     const solverResult = useSystemStore((state) => state.solverResult);
     const showFBD = useSystemStore((state) => state.ui.showFBD);
 
-    // Show FBD if toggle is on AND we have either:
-    // 1. A solved system, OR
-    // 2. Tension data from a partially solved system
-    if (!showFBD || !solverResult) return null;
-    const hasTensionData = solverResult.tensions && solverResult.tensions.size > 0;
-    if (!solverResult.solved && !hasTensionData) return null;
+    if (!showFBD) return null;
 
     const renderArrow = (start: Point, forceX: number, forceY: number, color: string, label: string, id: string) => {
         // Scale factor to make forces visible
@@ -113,7 +108,7 @@ export const FBDLayer: React.FC = () => {
                 }
 
                 // 2. Tension (Ropes connected to components)
-                if (component.type !== ComponentType.ROPE && component.type !== ComponentType.SPRING) {
+                if (solverResult && component.type !== ComponentType.ROPE && component.type !== ComponentType.SPRING) {
                     // Find ropes connected to this component
                     const connectedRopes = system.components.filter(c =>
                         c.type === ComponentType.ROPE &&

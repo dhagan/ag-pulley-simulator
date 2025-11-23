@@ -6,6 +6,34 @@ import { solveLinearSystem, validateSolution } from './matrix-solver';
 export function solvePulleySystem(system: SystemState): SolverResult {
     console.log('🔍 SOLVER: Starting');
 
+    // Validate that all nodes are connected
+    const unattachedComponents = system.components.filter(c => {
+        if (c.type === 'anchor' || c.type === 'pulley' || c.type === 'mass') {
+            const isConnected = system.components.some(other => 
+                (other.type === 'rope' || other.type === 'spring') &&
+                (other.startNodeId === c.id || other.endNodeId === c.id)
+            );
+            return !isConnected;
+        }
+        return false;
+    });
+
+    if (unattachedComponents.length > 0) {
+        const names = unattachedComponents.map(c => `${c.type} (${c.id})`);
+        console.error('❌ SOLVER: Unattached components', names);
+        return {
+            tensions: new Map(),
+            segmentTensions: new Map(),
+            springForces: new Map(),
+            reactionForces: new Map(),
+            displacements: new Map(),
+            totalRopeLength: 0,
+            ropeSegmentAnalysis: new Map(),
+            solved: false,
+            error: `Unattached components: ${names.join(', ')}. All anchors, pulleys, and masses must be connected by ropes or springs.`,
+        };
+    }
+
     const graph = buildGraph(system);
     console.log('🔍 SOLVER: Graph built', { nodes: graph.nodes.size, edges: graph.edges.size });
 

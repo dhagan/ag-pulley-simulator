@@ -20,11 +20,32 @@ export function solveLinearSystem(
             };
         }
 
-        // Use math.js lusolve for solving Ax = b
-        const solution = math.lusolve(A, b) as number[][];
+        const numEquations = A.length;
+        const numUnknowns = A[0].length;
 
-        // lusolve returns [[x1], [x2], ...], flatten it
-        const flatSolution = solution.map((row) => row[0]);
+        // Use appropriate solver based on system type
+        let flatSolution: number[];
+        
+        if (numEquations === numUnknowns) {
+            // Square system: use LU decomposition
+            const solution = math.lusolve(A, b) as number[][];
+            flatSolution = solution.map((row) => row[0]);
+        } else if (numEquations > numUnknowns) {
+            // Overdetermined system: use least squares (QR decomposition)
+            // Solve using (A^T * A) * x = A^T * b
+            const AT = math.transpose(A);
+            const ATA = math.multiply(AT, A) as number[][];
+            const ATb = math.multiply(AT, b) as number[];
+            const solution = math.lusolve(ATA, ATb) as number[][];
+            flatSolution = solution.map((row) => row[0]);
+        } else {
+            // Underdetermined system
+            return {
+                solution: [],
+                solved: false,
+                error: 'Underdetermined system cannot be solved uniquely',
+            };
+        }
 
         return {
             solution: flatSolution,

@@ -21,20 +21,46 @@ export function calculateRopeSegments(
     startPoint: Point,
     endPoint: Point,
     system: SystemState,
-    _ropeId: string
+    ropeId: string
 ): RopeSegment[] {
+    // Check if start or end is a pulley and adjust to circumference
+    let adjustedStart = startPoint;
+    let adjustedEnd = endPoint;
+
+    const rope = system.components.find(c => c.id === ropeId && c.type === 'rope');
+    if (rope && rope.type === 'rope') {
+        const startComp = system.components.find(c => c.id === rope.startNodeId);
+        const endComp = system.components.find(c => c.id === rope.endNodeId);
+
+        if (startComp?.type === 'pulley' && 'radius' in startComp) {
+            const angle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
+            adjustedStart = {
+                x: startPoint.x + startComp.radius * Math.cos(angle),
+                y: startPoint.y + startComp.radius * Math.sin(angle)
+            };
+        }
+
+        if (endComp?.type === 'pulley' && 'radius' in endComp) {
+            const angle = Math.atan2(startPoint.y - endPoint.y, startPoint.x - endPoint.x);
+            adjustedEnd = {
+                x: endPoint.x + endComp.radius * Math.cos(angle),
+                y: endPoint.y + endComp.radius * Math.sin(angle)
+            };
+        }
+    }
+
     const pulleys = system.components.filter(c => c.type === 'pulley') as Pulley[];
     
     // Find all pulleys that intersect with the direct path
-    const intersectingPulleys = findIntermediatePulleys(startPoint, endPoint, pulleys);
+    const intersectingPulleys = findIntermediatePulleys(adjustedStart, adjustedEnd, pulleys);
     
     if (intersectingPulleys.length === 0) {
-        // Simple direct line segment
+        // Simple direct line segment with adjusted endpoints
         return [{
-            start: startPoint,
-            end: endPoint,
+            start: adjustedStart,
+            end: adjustedEnd,
             type: 'line',
-            length: distance(startPoint, endPoint)
+            length: distance(adjustedStart, adjustedEnd)
         }];
     }
     
@@ -42,7 +68,7 @@ export function calculateRopeSegments(
     intersectingPulleys.sort((a, b) => a.distance - b.distance);
     
     // Build segments: start -> pulley1 -> pulley2 -> ... -> end
-    return buildSegmentsWithPulleys(startPoint, endPoint, intersectingPulleys);
+    return buildSegmentsWithPulleys(adjustedStart, adjustedEnd, intersectingPulleys);
 }
 
 /**

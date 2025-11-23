@@ -16,40 +16,19 @@ function getPulleyTangentPoint(
 ): { x: number; y: number } {
     const dx = externalPoint.x - pulleyPos.x;
     const dy = externalPoint.y - pulleyPos.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance <= pulleyRadius) {
-        return {
-            x: pulleyPos.x + (dx / distance) * pulleyRadius,
-            y: pulleyPos.y + (dy / distance) * pulleyRadius,
-        };
+    if (dist < 0.01) {
+        // Points are essentially the same, return point on circumference
+        return { x: pulleyPos.x + pulleyRadius, y: pulleyPos.y };
     }
 
-    const L = distance;
-    const d = (pulleyRadius * pulleyRadius) / L;
-    const h = Math.sqrt(pulleyRadius * pulleyRadius - d * d);
-
-    const ux = dx / L;
-    const uy = dy / L;
-
-    const px = -uy;
-    const py = ux;
-
-    const t1x = pulleyPos.x + d * ux + h * px;
-    const t1y = pulleyPos.y + d * uy + h * py;
-
-    const t2x = pulleyPos.x + d * ux - h * px;
-    const t2y = pulleyPos.y + d * uy - h * py;
-
-    // Choose tangent with smaller angle deviation from straight line
-    const angle1 = Math.atan2(t1y - pulleyPos.y, t1x - pulleyPos.x);
-    const angle2 = Math.atan2(t2y - pulleyPos.y, t2x - pulleyPos.x);
-    const targetAngle = Math.atan2(dy, dx);
-
-    const diff1 = Math.abs(angle1 - targetAngle);
-    const diff2 = Math.abs(angle2 - targetAngle);
-
-    return diff1 < diff2 ? { x: t1x, y: t1y } : { x: t2x, y: t2y };
+    // Calculate the point on the circumference along the line to external point
+    const angle = Math.atan2(dy, dx);
+    return {
+        x: pulleyPos.x + pulleyRadius * Math.cos(angle),
+        y: pulleyPos.y + pulleyRadius * Math.sin(angle)
+    };
 }
 
 export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
@@ -92,16 +71,17 @@ export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
         );
     }
     
-    // Fallback to simple line rendering
+    // Fallback to simple line rendering with tangent points
     let startPos = startComp.position;
     let endPos = endComp.position;
 
+    // For pulleys, calculate tangent point on circumference
     if (startComp.type === ComponentType.PULLEY && 'radius' in startComp) {
-        startPos = getPulleyTangentPoint(startComp.position, startComp.radius, endPos);
+        startPos = getPulleyTangentPoint(startComp.position, startComp.radius, endComp.position);
     }
 
     if (endComp.type === ComponentType.PULLEY && 'radius' in endComp) {
-        endPos = getPulleyTangentPoint(endComp.position, endComp.radius, startPos);
+        endPos = getPulleyTangentPoint(endComp.position, endComp.radius, startComp.position);
     }
 
     return (

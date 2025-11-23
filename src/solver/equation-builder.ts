@@ -25,6 +25,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
     });
 
     // For each non-fixed node, add force balance equations
+    // Note: Fixed pulleys are treated as fixed nodes (no force balance needed)
     graph.nodes.forEach((node) => {
         if (!node.isFixed) {
             const eqX = new Array(unknowns.length).fill(0);
@@ -80,19 +81,49 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 }
             });
 
-            // Only add equations if they are non-trivial (not all coefficients are zero)
-            // This prevents overconstrained systems from trivial equations like "0 = 0"
-            const isXTrivial = eqX.every(c => c === 0) && constX === 0;
-            const isYTrivial = eqY.every(c => c === 0) && constY === 0;
-
-            if (!isXTrivial) {
+            // Add force balance equations: ΣF = 0
+            // For each direction, only add if the force component is significant (> 1% of total)
+            const maxCoeffX = Math.max(...eqX.map(c => Math.abs(c)), Math.abs(constX));
+            const maxCoeffY = Math.max(...eqY.map(c => Math.abs(c)), Math.abs(constY));
+            
+            // Add X equation if there's meaningful X-direction force
+            if (maxCoeffX > 1.0) {
                 equations.push(eqX);
                 constants.push(constX);
             }
-
-            if (!isYTrivial) {
+            
+            // Add Y equation if there's meaningful Y-direction force
+            if (maxCoeffY > 1.0) {
                 equations.push(eqY);
                 constants.push(constY);
+            }
+        }
+    });
+
+    // Add pulley constraints: For massless, frictionless pulleys, tensions on both sides are equal
+    graph.nodes.forEach((node) => {
+        const pulleyComponent = system.components.find(c => c.id === node.id && c.type === 'pulley');
+        if (pulleyComponent && pulleyComponent.type === 'pulley' && pulleyComponent.fixed) {
+            // Find all ropes connected to this pulley
+            const connectedRopes: string[] = [];
+            graph.edges.forEach((edge) => {
+                if (edge.type === 'rope' && (edge.startNodeId === node.id || edge.endNodeId === node.id)) {
+                    connectedRopes.push(edge.id);
+                }
+            });
+
+            // For each pair of ropes, add constraint T1 = T2 (or T1 - T2 = 0)
+            if (connectedRopes.length === 2) {
+                const eq = new Array(unknowns.length).fill(0);
+                const idx1 = unknownIndex.get(`T_${connectedRopes[0]}`);
+                const idx2 = unknownIndex.get(`T_${connectedRopes[1]}`);
+                
+                if (idx1 !== undefined && idx2 !== undefined) {
+                    eq[idx1] = 1;
+                    eq[idx2] = -1;
+                    equations.push(eq);
+                    constants.push(0);
+                }
             }
         }
     });
@@ -116,9 +147,10 @@ export function validateEquationSystem(eqSystem: EquationSystem): { valid: boole
         return { valid: false, error: `Underdetermined system: ${numEquations} equations for ${numUnknowns} unknowns` };
     }
 
-    if (numEquations > numUnknowns) {
-        return { valid: false, error: `Overdetermined system: ${numEquations} equations for ${numUnknowns} unknowns` };
-    }
+    // Allow overdetermined systems - they can be solved using least squares
+    // if (numEquations > numUnknowns) {
+    //     return { valid: false, error: `Overdetermined system: ${numEquations} equations for ${numUnknowns} unknowns` };
+    // }
 
     return { valid: true };
 }
