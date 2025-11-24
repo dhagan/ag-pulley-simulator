@@ -409,10 +409,27 @@ export function generateRopePathFromSegments(segments: RopeSegment[]): string {
             // Calculate arc parameters
             const startAngle = segment.arcStartAngle!;
             const endAngle = segment.arcEndAngle!;
-            const angleDiff = Math.abs(endAngle - startAngle);
+            
+            // Normalize angles to [0, 2π]
+            const normalizeAngle = (a: number) => {
+                while (a < 0) a += 2 * Math.PI;
+                while (a >= 2 * Math.PI) a -= 2 * Math.PI;
+                return a;
+            };
+            
+            const normStart = normalizeAngle(startAngle);
+            const normEnd = normalizeAngle(endAngle);
+            
+            // Calculate angular difference
+            let angleDiff = normEnd - normStart;
+            if (angleDiff < 0) angleDiff += 2 * Math.PI;
             
             const largeArc = angleDiff > Math.PI ? 1 : 0;
-            const sweep = endAngle > startAngle ? 1 : 0;
+            
+            // For ropes going over the TOP of pulley (Atwood machine):
+            // If start is on left (angle ~= π) and end is on right (angle ~= 0),
+            // we want to go counter-clockwise (sweep=0) to go over the top
+            const sweep = angleDiff <= Math.PI ? 1 : 0;
             
             path += ` A ${segment.arcRadius} ${segment.arcRadius} 0 ${largeArc} ${sweep} ${segment.end.x} ${segment.end.y}`;
         }
