@@ -66,7 +66,7 @@ export const Toolbar: React.FC = () => {
                     color: 'var(--color-accent-blue)',
                     fontWeight: 600,
                 }}>
-                    v1.3.0
+                    v1.4.0
                 </div>
             </div>
 
