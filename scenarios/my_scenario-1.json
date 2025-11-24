@@ -1,0 +1,97 @@
+{
+  "version": "1.4.0",
+  "name": "my_scenario-1",
+  "description": "Exported scenario - 11/24/2025, 5:10:07 AM",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "pulley1",
+      "type": "pulley",
+      "position": {
+        "x": 0,
+        "y": -100
+      },
+      "radius": 30,
+      "fixed": true
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": {
+        "x": -30,
+        "y": 60
+      },
+      "mass": 10
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": {
+        "x": 0,
+        "y": 50
+      },
+      "startNodeId": "mass1",
+      "endNodeId": "mass2",
+      "length": 650
+    },
+    {
+      "id": "rope_1763996934783_n5yp9iw",
+      "type": "rope",
+      "position": {
+        "x": 0,
+        "y": -10
+      },
+      "startNodeId": "pulley1",
+      "endNodeId": "mass2",
+      "length": 180,
+      "segments": [
+        {
+          "start": {
+            "x": 0,
+            "y": -100
+          },
+          "end": {
+            "x": 0,
+            "y": 80
+          },
+          "type": "line",
+          "length": 180
+        }
+      ]
+    },
+    {
+      "id": "mass_1763996972519_usvf5oi",
+      "type": "mass",
+      "position": {
+        "x": 30,
+        "y": 60
+      },
+      "mass": 10
+    },
+    {
+      "id": "rope_1763996978015_u8myfa1",
+      "type": "rope",
+      "position": {
+        "x": 0,
+        "y": -30
+      },
+      "startNodeId": "pulley1",
+      "endNodeId": "mass_1763996972519_usvf5oi",
+      "length": 140,
+      "segments": [
+        {
+          "start": {
+            "x": 0,
+            "y": -100
+          },
+          "end": {
+            "x": 0,
+            "y": 40
+          },
+          "type": "line",
+          "length": 140
+        }
+      ]
+    }
+  ]
+}

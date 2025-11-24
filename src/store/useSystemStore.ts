@@ -203,9 +203,9 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
         });
     },
 
-    createTestScenario: (scenarioNum: number) => {
-        // Load from JSON file using scenario loader utility
-        const loadedSystem = loadScenarioByNumber(scenarioNum);
+    createTestScenario: async (scenarioNum: number) => {
+        // Load from JSON file using scenario loader utility (now async)
+        const loadedSystem = await loadScenarioByNumber(scenarioNum);
         if (!loadedSystem) {
             console.error(`Scenario ${scenarioNum} not found`);
             return;

@@ -8,8 +8,8 @@ interface ScenarioInfo {
     icon: string;
 }
 
-// Use Vite's glob import to load all scenario files
-const scenarioModules = import.meta.glob('/scenarios/scenario_*.json');
+// Use Vite's glob import to load all scenario files (any .json in scenarios folder)
+const scenarioModules = import.meta.glob('../../scenarios/*.json');
 
 export const TestScenarios: React.FC = () => {
     const createTestScenario = useSystemStore((state) => state.createTestScenario);
@@ -17,25 +17,29 @@ export const TestScenarios: React.FC = () => {
 
     useEffect(() => {
         const loadScenarios = async () => {
+            console.log('Scenario modules found:', Object.keys(scenarioModules));
             const scenarioList: ScenarioInfo[] = [];
             
             // Load all scenario files
             const paths = Object.keys(scenarioModules).sort();
             
+            if (paths.length === 0) {
+                console.warn('No scenario files found!');
+            }
+            
+            let scenarioNum = 1;
             for (const path of paths) {
                 try {
-                    // Extract scenario number from filename
-                    const match = path.match(/scenario_(\d+)_/);
-                    if (!match) continue;
-                    
-                    const num = parseInt(match[1], 10);
                     const module = await scenarioModules[path]() as any;
                     
+                    // Extract filename for display
+                    const filename = path.split('/').pop()?.replace('.json', '') || `Scenario ${scenarioNum}`;
+                    
                     scenarioList.push({
-                        num,
-                        name: module.name || `Scenario ${num}`,
+                        num: scenarioNum++,
+                        name: module.name || filename,
                         description: module.description || '',
-                        icon: getIconForScenario(num)
+                        icon: getIconForScenario(scenarioNum - 1)
                     });
                 } catch (error) {
                     console.warn(`Failed to load scenario from ${path}:`, error);

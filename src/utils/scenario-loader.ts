@@ -1,30 +1,11 @@
 import { SystemState } from '../types';
 import { buildGraph } from './graph-builder';
 
-// Import all scenario JSON files
-import scenario01 from '../../scenarios/scenario_01_simple_hanging_mass.json';
-import scenario02 from '../../scenarios/scenario_02_atwood_machine.json';
-import scenario03 from '../../scenarios/scenario_03_spring_mass.json';
-import scenario04 from '../../scenarios/scenario_04_compound_pulley.json';
-import scenario05 from '../../scenarios/scenario_05_y_configuration.json';
-import scenario06 from '../../scenarios/scenario_06_spring_rope_combined.json';
-import scenario07 from '../../scenarios/scenario_07_spring_pulley.json';
-import scenario08 from '../../scenarios/scenario_08_pulley_becket.json';
-import scenario09 from '../../scenarios/scenario_09_double_pulley.json';
-import scenario10 from '../../scenarios/scenario_10_complex_network.json';
+// Dynamically import all scenario JSON files (any .json in scenarios folder)
+const scenarioModules = import.meta.glob('../../scenarios/*.json');
 
-const scenarios = [
-    scenario01,
-    scenario02,
-    scenario03,
-    scenario04,
-    scenario05,
-    scenario06,
-    scenario07,
-    scenario08,
-    scenario09,
-    scenario10,
-];
+// Cache loaded scenarios
+const scenarioCache = new Map<number, any>();
 
 /**
  * Load a scenario from JSON and convert to SystemState
@@ -41,23 +22,60 @@ export function loadScenario(scenarioJson: any): SystemState {
 }
 
 /**
- * Load a scenario by number (1-10)
+ * Load a scenario by number (1-N) - dynamically loaded
  */
-export function loadScenarioByNumber(num: number): SystemState | null {
-    if (num < 1 || num > scenarios.length) {
+export async function loadScenarioByNumber(num: number): Promise<SystemState | null> {
+    // Check cache first
+    if (scenarioCache.has(num)) {
+        return loadScenario(scenarioCache.get(num));
+    }
+
+    // Get all paths sorted
+    const paths = Object.keys(scenarioModules).sort();
+    
+    // Get the nth scenario (1-indexed)
+    const scenarioPath = paths[num - 1];
+    
+    if (!scenarioPath) {
+        console.warn(`Scenario ${num} not found (only ${paths.length} scenarios available)`);
         return null;
     }
-    return loadScenario(scenarios[num - 1]);
+
+    try {
+        const module = await scenarioModules[scenarioPath]() as any;
+        scenarioCache.set(num, module);
+        return loadScenario(module);
+    } catch (error) {
+        console.error(`Failed to load scenario ${num}:`, error);
+        return null;
+    }
 }
 
 /**
  * Get scenario metadata
  */
-export function getScenarioInfo(num: number) {
-    const scenario = scenarios[num - 1];
-    return scenario ? {
-        name: scenario.name,
-        description: scenario.description,
-        version: scenario.version,
-    } : null;
+export async function getScenarioInfo(num: number) {
+    const paths = Object.keys(scenarioModules).sort();
+    const scenarioPath = paths[num - 1];
+
+    if (!scenarioPath) return null;
+
+    try {
+        const module = await scenarioModules[scenarioPath]() as any;
+        return {
+            name: module.name,
+            description: module.description,
+            version: module.version,
+        };
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Get list of all available scenario numbers
+ */
+export function getAvailableScenarios(): number[] {
+    const count = Object.keys(scenarioModules).length;
+    return Array.from({ length: count }, (_, i) => i + 1);
 }
