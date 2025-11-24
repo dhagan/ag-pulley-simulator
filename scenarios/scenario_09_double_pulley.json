@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_9_Double_Pulley",
-  "description": "Two separate pulley systems with balancing forces",
+  "description": "Two independent pulley systems, each with vertical drops",
   "gravity": 9.81,
   "components": [
     {
@@ -49,8 +49,8 @@
         "x": -100,
         "y": -25
       },
-      "startNodeId": "pulley1",
-      "endNodeId": "mass1",
+      "startNodeId": "mass1",
+      "endNodeId": "pulley1",
       "length": 350
     },
     {
@@ -63,28 +63,6 @@
       "startNodeId": "pulley2",
       "endNodeId": "mass2",
       "length": 350
-    },
-    {
-      "id": "force1",
-      "type": "force_vector",
-      "position": {
-        "x": -100,
-        "y": 150
-      },
-      "Fx": 0,
-      "Fy": 58.86,
-      "appliedToNodeId": "mass1"
-    },
-    {
-      "id": "force2",
-      "type": "force_vector",
-      "position": {
-        "x": 100,
-        "y": 150
-      },
-      "Fx": 0,
-      "Fy": 88.29,
-      "appliedToNodeId": "mass2"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_3_Spring_Mass",
-  "description": "Mass suspended by spring",
+  "description": "Mass suspended vertically by spring",
   "gravity": 9.81,
   "components": [
     {
