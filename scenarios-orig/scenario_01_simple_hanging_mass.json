@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
-  "name": "Scenario_2_Atwood_Machine",
-  "description": "Atwood machine: rope from mass1 up over pulley down to mass2",
+  "name": "my_scenario",
+  "description": "Exported scenario - 11/24/2025, 4:46:43 AM",
   "gravity": 9.81,
   "components": [
     {
