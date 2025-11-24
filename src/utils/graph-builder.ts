@@ -199,7 +199,7 @@ export function validateGraph(graph: Graph, system: SystemState): { valid: boole
         }
     });
 
-    // Check that pulleys have exactly 2 rope connections (but becket points are separate)
+    // Check that pulleys have at least 1 rope connection (can have 2+ for compound systems)
     graph.nodes.forEach((_node, nodeId) => {
         // Skip virtual anchor nodes and becket nodes
         if (nodeId.endsWith('_anchor') || nodeId.endsWith('_becket')) return;
@@ -209,9 +209,10 @@ export function validateGraph(graph: Graph, system: SystemState): { valid: boole
             const ropeConnections = Array.from(graph.edges.values()).filter(
                 (edge) => edge.type === 'rope' && (edge.startNodeId === nodeId || edge.endNodeId === nodeId)
             );
-            if (ropeConnections.length !== 2) {
-                errors.push(`Pulley ${nodeId} must have exactly 2 rope connections (has ${ropeConnections.length}). Becket is separate.`);
+            if (ropeConnections.length === 0) {
+                errors.push(`Pulley ${nodeId} must have at least 1 rope connection. Becket is separate.`);
             }
+            // Note: Pulleys can have 1 (dead-end), 2 (typical), or more (compound) rope connections
         }
     });
 
