@@ -26,15 +26,16 @@ function distance(p1: Point, p2: Point): number {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 
-// Scenario 1: Simple hanging mass
+// Scenario 1: Simple hanging mass with balancing force
 function generateScenario01(): Scenario {
     const anchor: Point = { x: 0, y: -200 };
     const mass: Point = { x: 0, y: 100 };
+    const massWeight = 10 * 9.81; // Force to balance
     
     return {
         version: "1.3.0",
         name: "Scenario_1_Simple_Hanging_Mass",
-        description: "Single mass hanging from anchor",
+        description: "Single mass hanging from anchor with balancing force",
         gravity: 9.81,
         components: [
             {
@@ -56,6 +57,14 @@ function generateScenario01(): Scenario {
                 startNodeId: "anchor1",
                 endNodeId: "mass1",
                 length: distance(anchor, mass)
+            },
+            {
+                id: "force1",
+                type: "force_vector",
+                position: mass,
+                Fx: 0,
+                Fy: massWeight,
+                appliedToNodeId: "mass1"
             }
         ]
     };
@@ -67,8 +76,14 @@ function generateScenario02(): Scenario {
     const pulleyRadius = 30;
     
     // Masses hang from opposite sides of pulley (offset by radius)
+    // LEFT mass on LEFT side, RIGHT mass on RIGHT side - NO CROSSING
     const mass1: Point = { x: -pulleyRadius, y: 200 };
     const mass2: Point = { x: pulleyRadius, y: 200 };
+    
+    // Rope from LEFT mass goes UP to LEFT side of pulley
+    const pulleyLeft: Point = { x: -pulleyRadius, y: pulley.y };
+    // Rope from RIGHT mass goes UP to RIGHT side of pulley
+    const pulleyRight: Point = { x: pulleyRadius, y: pulley.y };
     
     return {
         version: "1.3.0",
@@ -98,18 +113,18 @@ function generateScenario02(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: mass1.x, y: (pulley.y + mass1.y) / 2 },
+                position: { x: mass1.x, y: (pulleyLeft.y + mass1.y) / 2 },
                 startNodeId: "mass1",
                 endNodeId: "pulley1",
-                length: distance(mass1, pulley)
+                length: distance(mass1, pulleyLeft)
             },
             {
                 id: "rope2",
                 type: "rope",
-                position: { x: mass2.x, y: (pulley.y + mass2.y) / 2 },
+                position: { x: mass2.x, y: (pulleyRight.y + mass2.y) / 2 },
                 startNodeId: "pulley1",
                 endNodeId: "mass2",
-                length: distance(pulley, mass2)
+                length: distance(pulleyRight, mass2)
             }
         ]
     };
@@ -157,11 +172,12 @@ function generateScenario04(): Scenario {
     const anchor: Point = { x: 0, y: -200 };
     const pulley: Point = { x: 0, y: -100 };
     const mass: Point = { x: 0, y: 100 };
+    const massWeight = 20 * 9.81;
     
     return {
         version: "1.3.0",
         name: "Scenario_4_Compound_Pulley",
-        description: "Compound pulley system - all components vertically aligned",
+        description: "Compound pulley system with balancing force",
         gravity: 9.81,
         components: [
             {
@@ -198,6 +214,14 @@ function generateScenario04(): Scenario {
                 startNodeId: "pulley1",
                 endNodeId: "mass1",
                 length: distance(pulley, mass)
+            },
+            {
+                id: "force1",
+                type: "force_vector",
+                position: mass,
+                Fx: 0,
+                Fy: massWeight,
+                appliedToNodeId: "mass1"
             }
         ]
     };
@@ -310,9 +334,11 @@ function generateScenario07(): Scenario {
     const springPulley: Point = { x: 0, y: 0 };
     const pulleyRadius = 30;
     
-    // Masses on opposite sides
+    // Masses on opposite sides - NO CROSSING
     const mass1: Point = { x: -pulleyRadius, y: 150 };
     const mass2: Point = { x: pulleyRadius, y: 150 };
+    const pulleyLeft: Point = { x: -pulleyRadius, y: springPulley.y };
+    const pulleyRight: Point = { x: pulleyRadius, y: springPulley.y };
     
     return {
         version: "1.3.0",
@@ -345,18 +371,18 @@ function generateScenario07(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: mass1.x, y: (springPulley.y + mass1.y) / 2 },
+                position: { x: mass1.x, y: (pulleyLeft.y + mass1.y) / 2 },
                 startNodeId: "mass1",
                 endNodeId: "springPulley1",
-                length: distance(mass1, springPulley)
+                length: distance(mass1, pulleyLeft)
             },
             {
                 id: "rope2",
                 type: "rope",
-                position: { x: mass2.x, y: (springPulley.y + mass2.y) / 2 },
+                position: { x: mass2.x, y: (pulleyRight.y + mass2.y) / 2 },
                 startNodeId: "springPulley1",
                 endNodeId: "mass2",
-                length: distance(springPulley, mass2)
+                length: distance(pulleyRight, mass2)
             }
         ]
     };
@@ -421,11 +447,13 @@ function generateScenario09(): Scenario {
     // Each mass hangs vertically below its pulley
     const mass1: Point = { x: -100, y: 150 };
     const mass2: Point = { x: 100, y: 150 };
+    const mass1Weight = 6 * 9.81;
+    const mass2Weight = 9 * 9.81;
     
     return {
         version: "1.3.0",
         name: "Scenario_9_Double_Pulley",
-        description: "Two separate pulley systems, each with mass hanging vertically",
+        description: "Two separate pulley systems with balancing forces",
         gravity: 9.81,
         components: [
             {
@@ -458,8 +486,8 @@ function generateScenario09(): Scenario {
                 id: "rope1",
                 type: "rope",
                 position: { x: mass1.x, y: (pulley1.y + mass1.y) / 2 },
-                startNodeId: "mass1",
-                endNodeId: "pulley1",
+                startNodeId: "pulley1",
+                endNodeId: "mass1",
                 length: distance(mass1, pulley1)
             },
             {
@@ -469,6 +497,22 @@ function generateScenario09(): Scenario {
                 startNodeId: "pulley2",
                 endNodeId: "mass2",
                 length: distance(pulley2, mass2)
+            },
+            {
+                id: "force1",
+                type: "force_vector",
+                position: mass1,
+                Fx: 0,
+                Fy: mass1Weight,
+                appliedToNodeId: "mass1"
+            },
+            {
+                id: "force2",
+                type: "force_vector",
+                position: mass2,
+                Fx: 0,
+                Fy: mass2Weight,
+                appliedToNodeId: "mass2"
             }
         ]
     };
@@ -480,11 +524,12 @@ function generateScenario10(): Scenario {
     const pulley1: Point = { x: 0, y: -100 };
     const mass1: Point = { x: -100, y: 100 };  // Below anchor1
     const mass2: Point = { x: 0, y: 150 };     // Below pulley1
+    const mass2Weight = 8 * 9.81;
     
     return {
         version: "1.3.0",
         name: "Scenario_10_Complex_Network",
-        description: "Complex network with vertical connections",
+        description: "Complex network with vertical connections and balancing force",
         gravity: 9.81,
         components: [
             {
@@ -529,6 +574,14 @@ function generateScenario10(): Scenario {
                 startNodeId: "pulley1",
                 endNodeId: "mass2",
                 length: distance(pulley1, mass2)
+            },
+            {
+                id: "force1",
+                type: "force_vector",
+                position: mass2,
+                Fx: 0,
+                Fy: mass2Weight,
+                appliedToNodeId: "mass2"
             }
         ]
     };

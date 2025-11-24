@@ -1,7 +1,7 @@
 {
   "version": "1.3.0",
   "name": "Scenario_10_Complex_Network",
-  "description": "Complex network with vertical connections",
+  "description": "Complex network with vertical connections and balancing force",
   "gravity": 9.81,
   "components": [
     {
@@ -64,6 +64,17 @@
       "startNodeId": "pulley1",
       "endNodeId": "mass2",
       "length": 250
+    },
+    {
+      "id": "force1",
+      "type": "force_vector",
+      "position": {
+        "x": 0,
+        "y": 150
+      },
+      "Fx": 0,
+      "Fy": 78.48,
+      "appliedToNodeId": "mass2"
     }
   ]
 }

@@ -44,7 +44,7 @@
       },
       "startNodeId": "mass1",
       "endNodeId": "springPulley1",
-      "length": 152.97058540778355
+      "length": 150
     },
     {
       "id": "rope2",
@@ -55,7 +55,7 @@
       },
       "startNodeId": "springPulley1",
       "endNodeId": "mass2",
-      "length": 152.97058540778355
+      "length": 150
     }
   ]
 }

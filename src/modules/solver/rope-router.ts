@@ -210,31 +210,26 @@ function calculateTangentPointsForRope(
         return null;
     }
     
-    // Choose the appropriate tangent pair (shortest path)
-    // Try all combinations and pick shortest total path
-    let minLength = Infinity;
-    let bestEntry: Point = tangentsFromStart[0];
-    let bestExit: Point = tangentsToEnd[0];
+    // Determine which side of pulley each point is on
+    const startSide = Math.sign(ropeStart.x - pulley.position.x);
+    const endSide = Math.sign(ropeEnd.x - pulley.position.x);
     
-    for (const entry of tangentsFromStart) {
-        for (const exit of tangentsToEnd) {
-            const arcLength = calculateArcLength(
-                entry,
-                exit,
-                pulley.position,
-                pulley.radius
-            );
-            const totalLength = 
-                distance(ropeStart, entry) + 
-                arcLength + 
-                distance(exit, ropeEnd);
-            
-            if (totalLength < minLength) {
-                minLength = totalLength;
-                bestEntry = entry;
-                bestExit = exit;
-            }
-        }
+    // Choose tangent points based on which side of pulley the rope is on
+    // This prevents rope from crossing over pulley
+    let bestEntry: Point;
+    let bestExit: Point;
+    
+    // If both points on same side, use same-side tangents
+    if (startSide * endSide > 0) {
+        // Both on same side - use the tangent that keeps rope on that side
+        bestEntry = tangentsFromStart[startSide > 0 ? 0 : 1];
+        bestExit = tangentsToEnd[endSide > 0 ? 0 : 1];
+    } else {
+        // Points on opposite sides - this is an Atwood machine configuration
+        // Use tangents that allow rope to wrap over the top
+        // Choose based on which tangent is higher (closer to top of pulley)
+        bestEntry = tangentsFromStart[0].y < tangentsFromStart[1].y ? tangentsFromStart[0] : tangentsFromStart[1];
+        bestExit = tangentsToEnd[0].y < tangentsToEnd[1].y ? tangentsToEnd[0] : tangentsToEnd[1];
     }
     
     return { entry: bestEntry, exit: bestExit };

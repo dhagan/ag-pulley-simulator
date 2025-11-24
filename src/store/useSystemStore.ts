@@ -36,6 +36,7 @@ interface SystemStore {
     toggleFBD: () => void;
     toggleLabels: () => void;
     setRopeStartNode: (nodeId: string | null) => void;
+    snapMassesToVertical: () => void;
     updateGraph: () => void;
     solve: () => void;
     reset: () => void;
@@ -119,6 +120,60 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
     toggleLabels: () => set((state) => ({ ui: { ...state.ui, showLabels: !state.ui.showLabels } })),
 
     setRopeStartNode: (nodeId) => set({ ropeStartNodeId: nodeId }),
+
+    snapMassesToVertical: () => {
+        set((state) => {
+            const { components } = state.system;
+            const updatedComponents = components.map(comp => {
+                if (comp.type !== ComponentType.MASS) return comp;
+                
+                // Find ropes/springs connected to this mass
+                const connections = components.filter(c => {
+                    if (c.type !== ComponentType.ROPE && c.type !== ComponentType.SPRING) return false;
+                    return (c as any).startNodeId === comp.id || (c as any).endNodeId === comp.id;
+                });
+                
+                if (connections.length === 0) return comp;
+                
+                // Find pulley/anchor this mass is connected to
+                for (const conn of connections) {
+                    const otherNodeId = (conn as any).startNodeId === comp.id ? (conn as any).endNodeId : (conn as any).startNodeId;
+                    const otherNode = components.find(c => c.id === otherNodeId);
+                    
+                    if (otherNode && (
+                        otherNode.type === ComponentType.PULLEY ||
+                        otherNode.type === ComponentType.PULLEY_BECKET ||
+                        otherNode.type === ComponentType.SPRING_PULLEY ||
+                        otherNode.type === ComponentType.SPRING_PULLEY_BECKET ||
+                        otherNode.type === ComponentType.ANCHOR
+                    )) {
+                        // Snap mass to be directly below the pulley/anchor on the side it's currently on
+                        const massX = comp.position.x;
+                        const nodeX = otherNode.position.x;
+                        const radius = 'radius' in otherNode ? (otherNode.radius || 0) : 0;
+                        
+                        // If mass is significantly offset, keep it on that side
+                        // Otherwise snap to vertical
+                        let newX = nodeX;
+                        if (Math.abs(massX - nodeX) > radius / 2) {
+                            // Mass is on a side, snap to +/- radius
+                            newX = massX < nodeX ? nodeX - radius : nodeX + radius;
+                        }
+                        
+                        return { ...comp, position: { ...comp.position, x: newX } };
+                    }
+                }
+                
+                return comp;
+            });
+            
+            return {
+                history: [...state.history, state.system],
+                system: { ...state.system, components: updatedComponents }
+            };
+        });
+        get().updateGraph();
+    },
 
     updateGraph: () => {
         set((state) => ({ system: { ...state.system, graph: buildGraph(get().system) } }));

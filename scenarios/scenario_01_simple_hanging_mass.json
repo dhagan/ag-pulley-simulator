@@ -1,7 +1,7 @@
 {
   "version": "1.3.0",
   "name": "Scenario_1_Simple_Hanging_Mass",
-  "description": "Single mass hanging from anchor",
+  "description": "Single mass hanging from anchor with balancing force",
   "gravity": 9.81,
   "components": [
     {
@@ -32,6 +32,17 @@
       "startNodeId": "anchor1",
       "endNodeId": "mass1",
       "length": 300
+    },
+    {
+      "id": "force1",
+      "type": "force_vector",
+      "position": {
+        "x": 0,
+        "y": 100
+      },
+      "Fx": 0,
+      "Fy": 98.10000000000001,
+      "appliedToNodeId": "mass1"
     }
   ]
 }

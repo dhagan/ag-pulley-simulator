@@ -9,6 +9,7 @@ export const Toolbar: React.FC = () => {
     const toggleSnapToGrid = useSystemStore((state) => state.toggleSnapToGrid);
     const toggleFBD = useSystemStore((state) => state.toggleFBD);
     const toggleLabels = useSystemStore((state) => state.toggleLabels);
+    const snapMassesToVertical = useSystemStore((state) => state.snapMassesToVertical);
     const showGrid = useSystemStore((state) => state.ui.showGrid);
     const showFBD = useSystemStore((state) => state.ui.showFBD);
     const showLabels = useSystemStore((state) => state.ui.showLabels);
@@ -109,6 +110,9 @@ export const Toolbar: React.FC = () => {
                 </button>
                 <button onClick={toggleSnapToGrid} className={snapToGrid ? 'selected' : ''}>
                     Snap {snapToGrid ? '✓' : '✗'}
+                </button>
+                <button onClick={snapMassesToVertical} title="Snap masses to hang vertically from pulleys/anchors">
+                    📐 Align
                 </button>
                 <button onClick={toggleFBD} className={showFBD ? 'selected' : ''} title="Show Free Body Diagrams">
                     FBD {showFBD ? '✓' : '✗'}

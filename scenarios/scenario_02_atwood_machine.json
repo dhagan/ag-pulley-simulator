@@ -41,7 +41,7 @@
       },
       "startNodeId": "mass1",
       "endNodeId": "pulley1",
-      "length": 202.23748416156684
+      "length": 200
     },
     {
       "id": "rope2",
@@ -52,7 +52,7 @@
       },
       "startNodeId": "pulley1",
       "endNodeId": "mass2",
-      "length": 202.23748416156684
+      "length": 200
     }
   ]
 }
