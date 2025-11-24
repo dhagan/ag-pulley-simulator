@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SVG Arc</title>
+</head>
+<body>
+    <h3>Test: Arc from left tangent (-30, 0) to right tangent (30, 0) over top of circle at (0,0) r=30</h3>
+    <svg width="400" height="400" viewBox="-200 -200 400 400" style="border: 1px solid black;">
+        <!-- Circle -->
+        <circle cx="0" cy="0" r="30" fill="none" stroke="blue" stroke-width="2"/>
+        
+        <!-- Tangent points -->
+        <circle cx="-30" cy="0" r="3" fill="red"/>
+        <circle cx="30" cy="0" r="3" fill="red"/>
+        
+        <!-- Arc: Should go over the top -->
+        <path d="M -30 0 A 30 30 0 0 0 30 0" fill="none" stroke="green" stroke-width="3"/>
+        
+        <!-- Label -->
+        <text x="-150" y="-180" font-size="12">Green arc (sweep=0, large=0)</text>
+        <text x="-150" y="-165" font-size="12">Should follow blue circle over top</text>
+    </svg>
+    
+    <h3>Different sweep flags:</h3>
+    <svg width="400" height="200" viewBox="-200 -100 400 200" style="border: 1px solid black;">
+        <circle cx="0" cy="0" r="30" fill="none" stroke="blue" stroke-width="1"/>
+        <path d="M -30 0 A 30 30 0 0 0 30 0" fill="none" stroke="green" stroke-width="2"/>
+        <text x="40" y="5" font-size="10">sweep=0 (ccw)</text>
+    </svg>
+    
+    <svg width="400" height="200" viewBox="-200 -100 400 200" style="border: 1px solid black;">
+        <circle cx="0" cy="0" r="30" fill="none" stroke="blue" stroke-width="1"/>
+        <path d="M -30 0 A 30 30 0 0 1 30 0" fill="none" stroke="red" stroke-width="2"/>
+        <text x="40" y="5" font-size="10">sweep=1 (cw)</text>
+    </svg>
+    
+    <svg width="400" height="200" viewBox="-200 -100 400 200" style="border: 1px solid black;">
+        <circle cx="0" cy="0" r="30" fill="none" stroke="blue" stroke-width="1"/>
+        <path d="M -30 0 A 30 30 0 1 0 30 0" fill="none" stroke="purple" stroke-width="2"/>
+        <text x="40" y="5" font-size="10">large=1, sweep=0</text>
+    </svg>
+    
+    <svg width="400" height="200" viewBox="-200 -100 400 200" style="border: 1px solid black;">
+        <circle cx="0" cy="0" r="30" fill="none" stroke="blue" stroke-width="1"/>
+        <path d="M -30 0 A 30 30 0 1 1 30 0" fill="none" stroke="orange" stroke-width="2"/>
+        <text x="40" y="5" font-size="10">large=1, sweep=1</text>
+    </svg>
+</body>
+</html>

@@ -416,14 +416,19 @@ export function generateRopePathFromSegments(segments: RopeSegment[]): string {
         if (segment.type === 'line') {
             path += ` L ${segment.end.x} ${segment.end.y}`;
         } else if (segment.type === 'arc' && segment.arcCenter && segment.arcRadius) {
-            // Calculate arc parameters
+            // For arcs, we need to determine the sweep direction
             const startAngle = segment.arcStartAngle!;
             const endAngle = segment.arcEndAngle!;
             
-            // Normalize angles to [0, 2π]
+            // Check if we're crossing from left to right (or vice versa) horizontally
+            const startX = segment.start.x - segment.arcCenter.x;
+            const endX = segment.end.x - segment.arcCenter.x;
+            const crossingHorizontally = (startX < 0 && endX > 0) || (startX > 0 && endX < 0);
+            
+            // Normalize angles to [-π, π]
             const normalizeAngle = (a: number) => {
-                while (a < 0) a += 2 * Math.PI;
-                while (a >= 2 * Math.PI) a -= 2 * Math.PI;
+                while (a > Math.PI) a -= 2 * Math.PI;
+                while (a <= -Math.PI) a += 2 * Math.PI;
                 return a;
             };
             
@@ -432,14 +437,41 @@ export function generateRopePathFromSegments(segments: RopeSegment[]): string {
             
             // Calculate angular difference
             let angleDiff = normEnd - normStart;
-            if (angleDiff < 0) angleDiff += 2 * Math.PI;
             
-            const largeArc = angleDiff > Math.PI ? 1 : 0;
+            // If we're crossing horizontally (Atwood machine), force going over the top
+            if (crossingHorizontally) {
+                // Going from left to right: want positive diff (counter-clockwise over top)
+                if (startX < 0 && endX > 0) {
+                    if (angleDiff < 0) angleDiff += 2 * Math.PI;
+                } 
+                // Going from right to left: want negative diff (clockwise over top)
+                else if (startX > 0 && endX < 0) {
+                    if (angleDiff > 0) angleDiff -= 2 * Math.PI;
+                }
+            } else {
+                // Not crossing - normalize to shortest path
+                if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+            }
             
-            // For ropes going over the TOP of pulley (Atwood machine):
-            // If start is on left (angle ~= π) and end is on right (angle ~= 0),
-            // we want to go counter-clockwise (sweep=0) to go over the top
-            const sweep = angleDiff <= Math.PI ? 1 : 0;
+            const absAngleDiff = Math.abs(angleDiff);
+            const largeArc = absAngleDiff > Math.PI ? 1 : 0;
+            const sweep = angleDiff > 0 ? 0 : 1;
+            
+            // DJH: Debug logging for ALL arcs
+            console.log('DJH Arc Debug:', {
+                crossingHorizontally,
+                start: segment.start,
+                end: segment.end,
+                center: segment.arcCenter,
+                radius: segment.arcRadius,
+                startAngle: startAngle * 180 / Math.PI,
+                endAngle: endAngle * 180 / Math.PI,
+                angleDiff: angleDiff * 180 / Math.PI,
+                largeArc,
+                sweep,
+                svgCommand: `A ${segment.arcRadius} ${segment.arcRadius} 0 ${largeArc} ${sweep} ${segment.end.x} ${segment.end.y}`
+            });
             
             path += ` A ${segment.arcRadius} ${segment.arcRadius} 0 ${largeArc} ${sweep} ${segment.end.x} ${segment.end.y}`;
         }
