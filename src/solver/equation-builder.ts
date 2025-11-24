@@ -121,17 +121,25 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
             });
 
             // Add force balance equations: ΣF = 0
-            // Always add equations for nodes with connected edges
+            // Only add equations that have at least one non-zero coefficient or non-zero constant
             const hasConnectedEdges = Array.from(graph.edges.values()).some(e => 
                 e.startNodeId === node.id || e.endNodeId === node.id
             );
             
             if (hasConnectedEdges) {
-                // Add both X and Y equations for any node with connections
-                equations.push(eqX);
-                constants.push(constX);
-                equations.push(eqY);
-                constants.push(constY);
+                // Check if X equation is non-trivial (has non-zero coefficients or constant)
+                const hasNonZeroX = eqX.some(c => Math.abs(c) > 1e-10) || Math.abs(constX) > 1e-10;
+                if (hasNonZeroX) {
+                    equations.push(eqX);
+                    constants.push(constX);
+                }
+                
+                // Check if Y equation is non-trivial (has non-zero coefficients or constant)
+                const hasNonZeroY = eqY.some(c => Math.abs(c) > 1e-10) || Math.abs(constY) > 1e-10;
+                if (hasNonZeroY) {
+                    equations.push(eqY);
+                    constants.push(constY);
+                }
             }
         }
     });
@@ -185,13 +193,18 @@ export function validateEquationSystem(eqSystem: EquationSystem): { valid: boole
     const numEquations = eqSystem.A.length;
 
     if (numEquations < numUnknowns) {
-        return { valid: false, error: `Underdetermined system: ${numEquations} equations for ${numUnknowns} unknowns` };
+        const deficit = numUnknowns - numEquations;
+        return { 
+            valid: false, 
+            error: `Underdetermined: ${deficit} more unknown(s) than equation(s) - system needs more constraints` 
+        };
     }
 
-    // Allow overdetermined systems - they can be solved using least squares
-    // if (numEquations > numUnknowns) {
-    //     return { valid: false, error: `Overdetermined system: ${numEquations} equations for ${numUnknowns} unknowns` };
-    // }
+    // Log info for overdetermined systems - they can be solved using least squares
+    if (numEquations > numUnknowns) {
+        const excess = numEquations - numUnknowns;
+        console.info(`ℹ️ OVERDETERMINED: ${excess} extra equation(s) - using least squares approximation`);
+    }
 
     return { valid: true };
 }
