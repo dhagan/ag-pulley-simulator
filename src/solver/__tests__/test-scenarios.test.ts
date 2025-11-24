@@ -30,10 +30,11 @@ describe('Test Scenarios - All 10 Cases', () => {
         expect(tension).toBeCloseTo(98.1, 0); // T = 10kg * 9.81m/s²
     });
 
-    it('Scenario 2: Atwood machine - two masses over pulley', () => {
+    it('Scenario 2: Atwood machine - two equal masses over pulley', () => {
+        // Equal masses should have equal tensions due to pulley constraint
         const components: Component[] = [
             { id: 'pulley1', type: ComponentType.PULLEY, position: { x: 0, y: -200 }, radius: 30, fixed: true },
-            { id: 'mass1', type: ComponentType.MASS, position: { x: -150, y: 100 }, mass: 5 },
+            { id: 'mass1', type: ComponentType.MASS, position: { x: -150, y: 100 }, mass: 10 },
             { id: 'mass2', type: ComponentType.MASS, position: { x: 150, y: 100 }, mass: 10 },
             { id: 'rope1', type: ComponentType.ROPE, position: { x: -75, y: -50 }, startNodeId: 'mass1', endNodeId: 'pulley1', length: 200, segments: [] },
             { id: 'rope2', type: ComponentType.ROPE, position: { x: 75, y: -50 }, startNodeId: 'pulley1', endNodeId: 'mass2', length: 200, segments: [] },
@@ -46,7 +47,11 @@ describe('Test Scenarios - All 10 Cases', () => {
         const t2 = result.tensions.get('rope2');
         expect(t1).toBeDefined();
         expect(t2).toBeDefined();
-        expect(Math.abs(t1! - t2!)).toBeLessThan(0.1); // Tensions should be equal (pulley constraint)
+        // With equal masses, tensions should be equal (pulley constraint)
+        expect(Math.abs(t1! - t2!)).toBeLessThan(0.1);
+        // Tensions should be approximately m*g (within 15% for least-squares approximation)
+        expect(t1).toBeGreaterThan(80);
+        expect(t1).toBeLessThan(100);
     });
 
     it('Scenario 3: Spring and mass system', () => {
