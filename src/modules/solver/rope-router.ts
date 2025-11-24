@@ -210,26 +210,29 @@ function calculateTangentPointsForRope(
         return null;
     }
     
-    // Determine which side of pulley each point is on
-    const startSide = Math.sign(ropeStart.x - pulley.position.x);
-    const endSide = Math.sign(ropeEnd.x - pulley.position.x);
+    // Determine which side of pulley each point is on (relative to pulley center)
+    const startSide = ropeStart.x - pulley.position.x;
+    const endSide = ropeEnd.x - pulley.position.x;
     
-    // Choose tangent points based on which side of pulley the rope is on
-    // This prevents rope from crossing over pulley
+    // Choose tangent points that keep rope on correct side of pulley
+    // For each tangent point, check if it's on the same side as the rope endpoint
     let bestEntry: Point;
     let bestExit: Point;
     
-    // If both points on same side, use same-side tangents
-    if (startSide * endSide > 0) {
-        // Both on same side - use the tangent that keeps rope on that side
-        bestEntry = tangentsFromStart[startSide > 0 ? 0 : 1];
-        bestExit = tangentsToEnd[endSide > 0 ? 0 : 1];
+    // Select entry tangent: choose the one on the same side as ropeStart
+    if (Math.abs((tangentsFromStart[0].x - pulley.position.x) - startSide) < 
+        Math.abs((tangentsFromStart[1].x - pulley.position.x) - startSide)) {
+        bestEntry = tangentsFromStart[0];
     } else {
-        // Points on opposite sides - this is an Atwood machine configuration
-        // Use tangents that allow rope to wrap over the top
-        // Choose based on which tangent is higher (closer to top of pulley)
-        bestEntry = tangentsFromStart[0].y < tangentsFromStart[1].y ? tangentsFromStart[0] : tangentsFromStart[1];
-        bestExit = tangentsToEnd[0].y < tangentsToEnd[1].y ? tangentsToEnd[0] : tangentsToEnd[1];
+        bestEntry = tangentsFromStart[1];
+    }
+    
+    // Select exit tangent: choose the one on the same side as ropeEnd
+    if (Math.abs((tangentsToEnd[0].x - pulley.position.x) - endSide) < 
+        Math.abs((tangentsToEnd[1].x - pulley.position.x) - endSide)) {
+        bestExit = tangentsToEnd[0];
+    } else {
+        bestExit = tangentsToEnd[1];
     }
     
     return { entry: bestEntry, exit: bestExit };
@@ -237,6 +240,7 @@ function calculateTangentPointsForRope(
 
 /**
  * Calculate tangent points from an external point to a circle
+ * Returns the two points on the circle where tangent lines from the external point touch
  */
 function calculateTangentFromPointToCircle(
     point: Point,
@@ -254,19 +258,21 @@ function calculateTangentFromPointToCircle(
     }
     
     const dist = Math.sqrt(distSquared);
-    const angle = Math.atan2(dy, dx);
+    const angle = Math.atan2(dy, dx); // Angle from circle center to external point
     
-    // Angle offset for tangent
+    // Angle offset for tangent (perpendicular to radius at tangent point)
     const tangentAngle = Math.asin(circleRadius / dist);
     
+    // Tangent points are perpendicular to the line from center to external point
+    // at an offset angle of tangentAngle from the direct line
     const tangent1 = {
-        x: circleCenter.x + circleRadius * Math.cos(angle + tangentAngle + Math.PI / 2),
-        y: circleCenter.y + circleRadius * Math.sin(angle + tangentAngle + Math.PI / 2)
+        x: circleCenter.x + circleRadius * Math.cos(angle + Math.PI / 2 - tangentAngle),
+        y: circleCenter.y + circleRadius * Math.sin(angle + Math.PI / 2 - tangentAngle)
     };
     
     const tangent2 = {
-        x: circleCenter.x + circleRadius * Math.cos(angle - tangentAngle - Math.PI / 2),
-        y: circleCenter.y + circleRadius * Math.sin(angle - tangentAngle - Math.PI / 2)
+        x: circleCenter.x + circleRadius * Math.cos(angle - Math.PI / 2 + tangentAngle),
+        y: circleCenter.y + circleRadius * Math.sin(angle - Math.PI / 2 + tangentAngle)
     };
     
     return [tangent1, tangent2];
