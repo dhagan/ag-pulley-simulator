@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Scenario_5_Y_Configuration",
   "description": "Y-shaped configuration with two anchors (intentional angles)",
   "gravity": 9.81,

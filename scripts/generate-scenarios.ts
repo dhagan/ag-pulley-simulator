@@ -33,7 +33,7 @@ function generateScenario01(): Scenario {
     const massWeight = 10 * 9.81; // Force to balance
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_1_Simple_Hanging_Mass",
         description: "Single mass hanging from anchor with balancing force",
         gravity: 9.81,
@@ -86,7 +86,7 @@ function generateScenario02(): Scenario {
     const pulleyRight: Point = { x: pulleyRadius, y: pulley.y };
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_2_Atwood_Machine",
         description: "Classic Atwood machine with two masses on opposite sides of pulley",
         gravity: 9.81,
@@ -136,7 +136,7 @@ function generateScenario03(): Scenario {
     const mass: Point = { x: 0, y: 0 };
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_3_Spring_Mass",
         description: "Mass suspended by spring",
         gravity: 9.81,
@@ -175,7 +175,7 @@ function generateScenario04(): Scenario {
     const massWeight = 20 * 9.81;
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_4_Compound_Pulley",
         description: "Compound pulley system with balancing force",
         gravity: 9.81,
@@ -234,7 +234,7 @@ function generateScenario05(): Scenario {
     const mass: Point = { x: 0, y: 100 };
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_5_Y_Configuration",
         description: "Y-shaped configuration with two anchors (intentional angles)",
         gravity: 9.81,
@@ -284,7 +284,7 @@ function generateScenario06(): Scenario {
     const mass2: Point = { x: 0, y: 150 };
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_6_Spring_Rope_Combined",
         description: "Two masses connected by spring and rope in vertical chain",
         gravity: 9.81,
@@ -341,7 +341,7 @@ function generateScenario07(): Scenario {
     const pulleyRight: Point = { x: pulleyRadius, y: springPulley.y };
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_7_Spring_Pulley",
         description: "Spring pulley with masses on opposite sides (Atwood style)",
         gravity: 9.81,
@@ -395,7 +395,7 @@ function generateScenario08(): Scenario {
     const mass2: Point = { x: 0, y: 250 };
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_8_Pulley_Becket",
         description: "Pulley becket with vertical chain of masses",
         gravity: 9.81,
@@ -451,7 +451,7 @@ function generateScenario09(): Scenario {
     const mass2Weight = 9 * 9.81;
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_9_Double_Pulley",
         description: "Two separate pulley systems with balancing forces",
         gravity: 9.81,
@@ -527,7 +527,7 @@ function generateScenario10(): Scenario {
     const mass2Weight = 8 * 9.81;
     
     return {
-        version: "1.3.0",
+        version: "1.4.0",
         name: "Scenario_10_Complex_Network",
         description: "Complex network with vertical connections and balancing force",
         gravity: 9.81,

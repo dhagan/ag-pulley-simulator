@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Scenario_9_Double_Pulley",
   "description": "Two separate pulley systems with balancing forces",
   "gravity": 9.81,

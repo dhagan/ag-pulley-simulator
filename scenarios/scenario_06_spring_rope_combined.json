@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Scenario_6_Spring_Rope_Combined",
   "description": "Two masses connected by spring and rope in vertical chain",
   "gravity": 9.81,

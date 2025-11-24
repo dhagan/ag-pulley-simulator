@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Scenario_8_Pulley_Becket",
   "description": "Pulley becket with vertical chain of masses",
   "gravity": 9.81,

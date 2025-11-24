@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Scenario_10_Complex_Network",
   "description": "Complex network with vertical connections and balancing force",
   "gravity": 9.81,
