@@ -20,7 +20,7 @@
     {
       "id": "mass2",
       "type": "mass",
-      "position": { "x": 100, "y": 50 },
+      "position": { "x": 0, "y": 100 },
       "mass": 8
     },
     {
@@ -42,18 +42,10 @@
     {
       "id": "rope1",
       "type": "rope",
-      "position": { "x": -50, "y": -25 },
-      "startNodeId": "mass1",
+      "position": { "x": 0, "y": 0 },
+      "startNodeId": "mass2",
       "endNodeId": "pulley1",
-      "length": 180
-    },
-    {
-      "id": "rope2",
-      "type": "rope",
-      "position": { "x": 50, "y": -25 },
-      "startNodeId": "pulley1",
-      "endNodeId": "mass2",
-      "length": 180
+      "length": 200
     }
   ]
 }

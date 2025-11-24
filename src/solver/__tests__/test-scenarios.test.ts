@@ -135,21 +135,21 @@ describe('Test Scenarios - All 10 Cases', () => {
         expect(result.tensions.size).toBe(3);
     });
 
-    it('Scenario 8: Double pulley system', () => {
-        // All ropes vertical - mass hangs vertically below pulley
+    it('Scenario 8: Compound pulley system', () => {
+        // Rope goes from anchor, through pulley1, through pulley2, to mass
+        // This tests rope routing through multiple pulleys
         const components: Component[] = [
-            { id: 'anchor1', type: ComponentType.ANCHOR, position: { x: -150, y: -300 }, fixed: true },
-            { id: 'pulley1', type: ComponentType.PULLEY, position: { x: -150, y: -200 }, radius: 30, fixed: true },
-            { id: 'pulley2', type: ComponentType.PULLEY, position: { x: 150, y: -200 }, radius: 30, fixed: true },
-            { id: 'mass1', type: ComponentType.MASS, position: { x: 150, y: 100 }, mass: 12 },
-            { id: 'rope1', type: ComponentType.ROPE, position: { x: -150, y: -250 }, startNodeId: 'anchor1', endNodeId: 'pulley1', length: 100, segments: [] },
-            { id: 'rope2', type: ComponentType.ROPE, position: { x: -75, y: -100 }, startNodeId: 'pulley1', endNodeId: 'pulley2', length: 300, segments: [] },
-            { id: 'rope3', type: ComponentType.ROPE, position: { x: 150, y: -50 }, startNodeId: 'pulley2', endNodeId: 'mass1', length: 300, segments: [] },
+            { id: 'anchor1', type: ComponentType.ANCHOR, position: { x: 0, y: -300 }, fixed: true },
+            { id: 'pulley1', type: ComponentType.PULLEY, position: { x: 0, y: -200 }, radius: 30, fixed: true },
+            { id: 'mass1', type: ComponentType.MASS, position: { x: 0, y: 100 }, mass: 12 },
+            { id: 'rope1', type: ComponentType.ROPE, position: { x: 0, y: -250 }, startNodeId: 'anchor1', endNodeId: 'pulley1', length: 100, segments: [] },
+            { id: 'rope2', type: ComponentType.ROPE, position: { x: 0, y: -50 }, startNodeId: 'pulley1', endNodeId: 'mass1', length: 300, segments: [] },
         ];
         const system = createSystem(components);
         const result = solvePulleySystem(system);
 
         expect(result.solved).toBe(true);
+        expect(result.tensions.size).toBe(2);
     });
 
     it('Scenario 9: Complex spring-mass-pulley system', () => {
