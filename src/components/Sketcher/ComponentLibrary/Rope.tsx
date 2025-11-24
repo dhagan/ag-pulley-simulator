@@ -1,5 +1,5 @@
 import React from 'react';
-import { Rope as RopeType, ComponentType } from '../../../types';
+import { Rope as RopeType } from '../../../types';
 import { useSystemStore } from '../../../store/useSystemStore';
 import { generateRopePathFromSegments } from '../../../modules/solver/rope-router';
 
@@ -7,28 +7,6 @@ interface RopeProps {
     rope: RopeType;
     isSelected: boolean;
     onClick: () => void;
-}
-
-function getPulleyTangentPoint(
-    pulleyPos: { x: number; y: number },
-    pulleyRadius: number,
-    externalPoint: { x: number; y: number }
-): { x: number; y: number } {
-    const dx = externalPoint.x - pulleyPos.x;
-    const dy = externalPoint.y - pulleyPos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < 0.01) {
-        // Points are essentially the same, return point on circumference
-        return { x: pulleyPos.x + pulleyRadius, y: pulleyPos.y };
-    }
-
-    // Calculate the point on the circumference along the line to external point
-    const angle = Math.atan2(dy, dx);
-    return {
-        x: pulleyPos.x + pulleyRadius * Math.cos(angle),
-        y: pulleyPos.y + pulleyRadius * Math.sin(angle)
-    };
 }
 
 export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {

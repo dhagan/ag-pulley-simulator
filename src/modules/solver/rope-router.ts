@@ -57,7 +57,7 @@ export function calculateRopeSegments(
     // Get all pulleys but exclude ones we're directly connected to via becket
     const pulleys = system.components.filter(c => {
         const isPulley = c.type === 'pulley' || c.type === 'spring_pulley' || c.type === 'pulley_becket' || c.type === 'spring_pulley_becket';
-        if (!isPulley || !rope) return isPulley;
+        if (!isPulley || !rope || rope.type !== 'rope') return isPulley;
         
         // Exclude pulley if rope connects to its becket
         const connectedToBecket = rope.startNodeId === `${c.id}_becket` || rope.endNodeId === `${c.id}_becket`;

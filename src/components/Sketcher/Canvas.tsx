@@ -307,6 +307,80 @@ export const Canvas: React.FC = () => {
                         // Get end position, optionally constrained
                         let endPos = component.position;
                         
+                        // Auto-align vertically if one end is a mass and the other is pulley/anchor
+                        const startIsPulleyOrAnchor = startComp.type === ComponentType.PULLEY || 
+                                                      startComp.type === ComponentType.PULLEY_BECKET ||
+                                                      startComp.type === ComponentType.SPRING_PULLEY ||
+                                                      startComp.type === ComponentType.SPRING_PULLEY_BECKET ||
+                                                      startComp.type === ComponentType.ANCHOR;
+                        const endIsPulleyOrAnchor = component.type === ComponentType.PULLEY || 
+                                                    component.type === ComponentType.PULLEY_BECKET ||
+                                                    component.type === ComponentType.SPRING_PULLEY ||
+                                                    component.type === ComponentType.SPRING_PULLEY_BECKET ||
+                                                    component.type === ComponentType.ANCHOR;
+                        const startIsMass = startComp.type === ComponentType.MASS;
+                        const endIsMass = component.type === ComponentType.MASS;
+                        
+                        // If connecting mass to pulley/anchor, force vertical alignment
+                        if ((startIsMass && endIsPulleyOrAnchor) || (endIsMass && startIsPulleyOrAnchor)) {
+                            // Force vertical alignment - mass takes X position of pulley/anchor
+                            if (startIsMass && endIsPulleyOrAnchor) {
+                                // Start is mass, end is pulley/anchor - align mass to pulley X
+                                updateComponent(startComp.id, { position: { x: endPos.x, y: startComp.position.y } });
+                                // Re-fetch after update
+                                const updatedStart = system.components.find(c => c.id === ropeStartNodeId);
+                                if (updatedStart) {
+                                    const ropeLength = distance(updatedStart.position, endPos);
+                                    const newRope: Component = {
+                                        id: generateId('rope'),
+                                        type: ComponentType.ROPE,
+                                        position: {
+                                            x: (updatedStart.position.x + endPos.x) / 2,
+                                            y: (updatedStart.position.y + endPos.y) / 2,
+                                        },
+                                        startNodeId: ropeStartNodeId,
+                                        endNodeId: component.id,
+                                        length: ropeLength,
+                                        segments: [{
+                                            start: updatedStart.position,
+                                            end: endPos,
+                                            type: 'line' as const,
+                                            length: ropeLength
+                                        }],
+                                    };
+                                    addComponent(newRope);
+                                }
+                            } else if (endIsMass && startIsPulleyOrAnchor) {
+                                // End is mass, start is pulley/anchor - align mass to pulley X
+                                endPos = { x: startComp.position.x, y: component.position.y };
+                                updateComponent(component.id, { position: endPos });
+                                
+                                const ropeLength = distance(startComp.position, endPos);
+                                const newRope: Component = {
+                                    id: generateId('rope'),
+                                    type: ComponentType.ROPE,
+                                    position: {
+                                        x: (startComp.position.x + endPos.x) / 2,
+                                        y: (startComp.position.y + endPos.y) / 2,
+                                    },
+                                    startNodeId: ropeStartNodeId,
+                                    endNodeId: component.id,
+                                    length: ropeLength,
+                                    segments: [{
+                                        start: startComp.position,
+                                        end: endPos,
+                                        type: 'line' as const,
+                                        length: ropeLength
+                                    }],
+                                };
+                                addComponent(newRope);
+                            }
+                            setRopeStartNode(null);
+                            selectComponent(null);
+                            setTool(Tool.SELECT);
+                            return; // Exit early since we handled it
+                        }
+                        
                         // If Shift key is held, snap to vertical or horizontal
                         if (e.shiftKey) {
                             const dx = Math.abs(component.position.x - startComp.position.x);
