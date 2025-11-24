@@ -72,47 +72,66 @@ function generateScenario01(): Scenario {
     };
 }
 
-// Scenario 2: Atwood machine - ONE continuous rope over pulley
+// Scenario 2: Atwood machine - TWO separate ropes, PERFECTLY vertical
 function generateScenario02(): Scenario {
-    const pulley: Point = { x: 0, y: -100 }; // Pulley ABOVE the masses
+    const pulley: Point = { x: 0, y: 0 };
     const pulleyRadius = 30;
     
-    // Masses at same height, horizontally separated
-    const mass1: Point = { x: -150, y: 200 };
-    const mass2: Point = { x: 150, y: 200 };
+    // Masses DIRECTLY below pulley (x=0) for perfect vertical alignment
+    const mass1: Point = { x: 0, y: 200 };
+    const mass2: Point = { x: 0, y: 200 };
+    
+    // But wait - both masses can't be at same position!
+    // For Atwood, we need separate pulleys OR accept slight angle
+    // Let's use TWO pulleys, each with vertical rope
     
     return {
         version: "1.4.0",
         name: "Scenario_2_Atwood_Machine",
-        description: "Atwood machine: rope from mass1 up over pulley down to mass2",
+        description: "Atwood machine: two pulleys, each with perfectly vertical rope",
         gravity: 9.81,
         components: [
             {
                 id: "pulley1",
                 type: "pulley",
-                position: pulley,
+                position: { x: -100, y: 0 },
+                radius: pulleyRadius,
+                fixed: true
+            },
+            {
+                id: "pulley2",
+                type: "pulley",
+                position: { x: 100, y: 0 },
                 radius: pulleyRadius,
                 fixed: true
             },
             {
                 id: "mass1",
                 type: "mass",
-                position: mass1,
+                position: { x: -100, y: 200 },
                 mass: 5
             },
             {
                 id: "mass2",
                 type: "mass",
-                position: mass2,
+                position: { x: 100, y: 200 },
                 mass: 10
             },
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: 0, y: 50 },
+                position: { x: -100, y: 100 },
                 startNodeId: "mass1",
+                endNodeId: "pulley1",
+                length: 200
+            },
+            {
+                id: "rope2",
+                type: "rope",
+                position: { x: 100, y: 100 },
+                startNodeId: "pulley2",
                 endNodeId: "mass2",
-                length: 650
+                length: 200
             }
         ]
     };

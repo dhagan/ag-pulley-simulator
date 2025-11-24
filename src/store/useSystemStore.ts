@@ -41,6 +41,7 @@ interface SystemStore {
     solve: () => void;
     reset: () => void;
     undo: () => void;
+    loadSystem: (system: SystemState) => void;
     createTestSystem: () => void;
     createSimpleTest: () => void;
     createTestScenario: (scenarioNum: number) => void;
@@ -340,5 +341,11 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
 
     reset: () => {
         set({ system: initialSystemState, solverResult: null, history: [], ui: { ...initialUIState }, ropeStartNodeId: null });
+    },
+
+    loadSystem: (system: SystemState) => {
+        set({ system, solverResult: null, history: [], ropeStartNodeId: null });
+        get().updateGraph();
+        setTimeout(() => get().solve(), 100);
     },
 }));

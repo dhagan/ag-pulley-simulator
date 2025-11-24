@@ -1,21 +1,60 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSystemStore } from '../store/useSystemStore';
+
+interface ScenarioInfo {
+    num: number;
+    name: string;
+    description: string;
+    icon: string;
+}
+
+// Use Vite's glob import to load all scenario files
+const scenarioModules = import.meta.glob('/scenarios/scenario_*.json');
 
 export const TestScenarios: React.FC = () => {
     const createTestScenario = useSystemStore((state) => state.createTestScenario);
+    const [scenarios, setScenarios] = useState<ScenarioInfo[]>([]);
 
-    const scenarios = [
-        { num: 1, label: 'Simple Hanging Mass', desc: 'Single mass on rope', icon: '⚖️' },
-        { num: 2, label: 'Atwood Machine', desc: 'Two masses over pulley', icon: '⚙️' },
-        { num: 3, label: 'Spring & Mass', desc: 'Mass on spring', icon: '🌀' },
-        { num: 4, label: 'Spring-Rope Chain', desc: 'Two masses, spring & rope', icon: '🔗' },
-        { num: 5, label: 'Y-Configuration', desc: 'Mass suspended by two ropes', icon: '🔺' },
-        { num: 6, label: 'Horizontal Force', desc: 'Applied force scenario', icon: '➡️' },
-        { num: 7, label: 'Series Masses', desc: 'Three masses in chain', icon: '📦' },
-        { num: 8, label: 'Double Pulley', desc: 'Two pulleys system', icon: '⚙️⚙️' },
-        { num: 9, label: 'Spring-Pulley Mix', desc: 'Complex mixed system', icon: '🔧' },
-        { num: 10, label: 'Maximum Complexity', desc: 'Full interconnected network', icon: '🕸️' },
-    ];
+    useEffect(() => {
+        const loadScenarios = async () => {
+            const scenarioList: ScenarioInfo[] = [];
+            
+            // Load all scenario files
+            const paths = Object.keys(scenarioModules).sort();
+            
+            for (const path of paths) {
+                try {
+                    // Extract scenario number from filename
+                    const match = path.match(/scenario_(\d+)_/);
+                    if (!match) continue;
+                    
+                    const num = parseInt(match[1], 10);
+                    const module = await scenarioModules[path]() as any;
+                    
+                    scenarioList.push({
+                        num,
+                        name: module.name || `Scenario ${num}`,
+                        description: module.description || '',
+                        icon: getIconForScenario(num)
+                    });
+                } catch (error) {
+                    console.warn(`Failed to load scenario from ${path}:`, error);
+                }
+            }
+            
+            setScenarios(scenarioList);
+        };
+        
+        loadScenarios();
+    }, []);
+
+    const getIconForScenario = (num: number): string => {
+        const icons: Record<number, string> = {
+            1: '⚖️', 2: '⚙️', 3: '🌀', 4: '🔗', 5: '🔺',
+            6: '➡️', 7: '📦', 8: '⚙️⚙️', 9: '🔧', 10: '🕸️', 11: '🪝'
+        };
+        return icons[num] || '📋';
+    };
 
     return (
         <div
@@ -39,6 +78,12 @@ export const TestScenarios: React.FC = () => {
             >
                 🧪 Test Scenarios
             </h3>
+
+            {scenarios.length === 0 && (
+                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', textAlign: 'center', padding: 'var(--spacing-md)' }}>
+                    Loading scenarios...
+                </div>
+            )}
 
             {scenarios.map((test) => (
                 <button
@@ -69,10 +114,10 @@ export const TestScenarios: React.FC = () => {
                     <div style={{ fontSize: '1.5rem', lineHeight: 1 }}>{test.icon}</div>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '2px' }}>
-                            {test.num}. {test.label}
+                            {test.num}. {test.name}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-                            {test.desc}
+                            {test.description}
                         </div>
                     </div>
                 </button>
