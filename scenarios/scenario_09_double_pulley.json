@@ -21,14 +21,14 @@
     {
       "id": "mass1",
       "type": "mass",
-      "position": { "x": -100, "y": 100 },
-      "mass": 12
+      "position": { "x": -100, "y": 150 },
+      "mass": 6
     },
     {
       "id": "mass2",
       "type": "mass",
-      "position": { "x": 100, "y": 100 },
-      "mass": 8
+      "position": { "x": 100, "y": 150 },
+      "mass": 9
     },
     {
       "id": "rope1",
