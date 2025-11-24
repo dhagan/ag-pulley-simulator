@@ -240,7 +240,13 @@ function calculateTangentPointsForRope(
 
 /**
  * Calculate tangent points from an external point to a circle
- * Returns the two points on the circle where tangent lines from the external point touch
+ * Uses the correct geometric formula for external tangents
+ * 
+ * For external point P at distance d from center C with radius r:
+ * 1. The tangent touches the circle at point T
+ * 2. Triangle CPT is a right triangle with right angle at T
+ * 3. sin(angle_PCT) = r/d, so angle_PCT = asin(r/d)
+ * 4. The angle from C to T is: (angle from C to P) ± (π/2 - angle_PCT)
  */
 function calculateTangentFromPointToCircle(
     point: Point,
@@ -258,21 +264,25 @@ function calculateTangentFromPointToCircle(
     }
     
     const dist = Math.sqrt(distSquared);
-    const angle = Math.atan2(dy, dx); // Angle from circle center to external point
+    const angleToPoint = Math.atan2(dy, dx); // Angle from center to external point
     
-    // Angle offset for tangent (perpendicular to radius at tangent point)
-    const tangentAngle = Math.asin(circleRadius / dist);
+    // In the right triangle formed by C, P, and T:
+    // The angle at C (angle_PCT) where sin(angle_PCT) = r/d
+    const anglePCT = Math.asin(circleRadius / dist);
     
-    // Tangent points are perpendicular to the line from center to external point
-    // at an offset angle of tangentAngle from the direct line
+    // The tangent point T is at angle: angleToPoint ± (π/2 - anglePCT)
+    // This is because the radius to T is perpendicular to the tangent line PT
+    const tangent1Angle = angleToPoint + (Math.PI / 2 - anglePCT);
+    const tangent2Angle = angleToPoint - (Math.PI / 2 - anglePCT);
+    
     const tangent1 = {
-        x: circleCenter.x + circleRadius * Math.cos(angle + Math.PI / 2 - tangentAngle),
-        y: circleCenter.y + circleRadius * Math.sin(angle + Math.PI / 2 - tangentAngle)
+        x: circleCenter.x + circleRadius * Math.cos(tangent1Angle),
+        y: circleCenter.y + circleRadius * Math.sin(tangent1Angle)
     };
     
     const tangent2 = {
-        x: circleCenter.x + circleRadius * Math.cos(angle - Math.PI / 2 + tangentAngle),
-        y: circleCenter.y + circleRadius * Math.sin(angle - Math.PI / 2 + tangentAngle)
+        x: circleCenter.x + circleRadius * Math.cos(tangent2Angle),
+        y: circleCenter.y + circleRadius * Math.sin(tangent2Angle)
     };
     
     return [tangent1, tangent2];
