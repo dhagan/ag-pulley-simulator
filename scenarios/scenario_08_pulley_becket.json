@@ -1,40 +1,55 @@
 {
   "version": "1.3.0",
-  "name": "Scenario_08_Pulley_Becket_System",
-  "description": "Fixed pulley with becket supporting a mass",
+  "name": "Scenario_8_Pulley_Becket",
+  "description": "Pulley becket with vertical chain of masses",
   "gravity": 9.81,
   "components": [
     {
       "id": "pulleyBecket1",
       "type": "pulley_becket",
-      "position": { "x": 0, "y": -100 },
+      "position": {
+        "x": 0,
+        "y": -100
+      },
       "radius": 30,
       "fixed": true
     },
     {
       "id": "mass1",
       "type": "mass",
-      "position": { "x": 0, "y": 150 },
+      "position": {
+        "x": 0,
+        "y": 150
+      },
       "mass": 10
     },
     {
       "id": "mass2",
       "type": "mass",
-      "position": { "x": 0, "y": 250 },
+      "position": {
+        "x": 0,
+        "y": 250
+      },
       "mass": 8
     },
     {
       "id": "rope1",
       "type": "rope",
-      "position": { "x": 0, "y": 25 },
-      "startNodeId": "mass1",
-      "endNodeId": "pulleyBecket1",
+      "position": {
+        "x": 0,
+        "y": 25
+      },
+      "startNodeId": "pulleyBecket1",
+      "endNodeId": "mass1",
       "length": 250
     },
     {
       "id": "rope2",
       "type": "rope",
-      "position": { "x": 0, "y": 175 },
+      "position": {
+        "x": 0,
+        "y": 200
+      },
       "startNodeId": "mass1",
       "endNodeId": "mass2",
       "length": 100

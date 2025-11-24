@@ -1,51 +1,69 @@
 {
   "version": "1.3.0",
   "name": "Scenario_10_Complex_Network",
-  "description": "Maximum complexity interconnected network",
+  "description": "Complex network with vertical connections",
   "gravity": 9.81,
   "components": [
     {
+      "id": "anchor1",
+      "type": "anchor",
+      "position": {
+        "x": -100,
+        "y": -150
+      },
+      "fixed": true
+    },
+    {
       "id": "pulley1",
       "type": "pulley",
-      "position": { "x": 0, "y": -100 },
+      "position": {
+        "x": 0,
+        "y": -100
+      },
       "radius": 30,
       "fixed": true
     },
     {
       "id": "mass1",
       "type": "mass",
-      "position": { "x": -100, "y": 100 },
+      "position": {
+        "x": -100,
+        "y": 100
+      },
       "mass": 10
     },
     {
       "id": "mass2",
       "type": "mass",
-      "position": { "x": 0, "y": 150 },
+      "position": {
+        "x": 0,
+        "y": 150
+      },
       "mass": 8
-    },
-    {
-      "id": "anchor1",
-      "type": "anchor",
-      "position": { "x": -100, "y": -150 },
-      "fixed": true
     },
     {
       "id": "spring1",
       "type": "spring",
-      "position": { "x": -100, "y": -50 },
+      "position": {
+        "x": -100,
+        "y": -25
+      },
       "startNodeId": "anchor1",
       "endNodeId": "mass1",
       "restLength": 150,
       "stiffness": 60,
-      "currentLength": 200
+      "currentLength": 250
     },
     {
       "id": "rope1",
       "type": "rope",
-      "position": { "x": 0, "y": 0 },
-      "startNodeId": "mass2",
-      "endNodeId": "pulley1",
-      "length": 200
+      "position": {
+        "x": 0,
+        "y": 25
+      },
+      "startNodeId": "pulley1",
+      "endNodeId": "mass2",
+      "length": 250
     }
   ]
 }
