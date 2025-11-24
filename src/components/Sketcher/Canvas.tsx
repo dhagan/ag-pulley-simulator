@@ -304,20 +304,41 @@ export const Canvas: React.FC = () => {
                 } else if (ropeStartNodeId !== component.id) {
                     const startComp = system.components.find(c => c.id === ropeStartNodeId);
                     if (startComp) {
-                        const ropeLength = distance(startComp.position, component.position);
+                        // Get end position, optionally constrained
+                        let endPos = component.position;
+                        
+                        // If Shift key is held, snap to vertical or horizontal
+                        if (e.shiftKey) {
+                            const dx = Math.abs(component.position.x - startComp.position.x);
+                            const dy = Math.abs(component.position.y - startComp.position.y);
+                            
+                            // Snap to dominant axis
+                            if (dx > dy) {
+                                // Horizontal - keep Y same as start
+                                endPos = { x: component.position.x, y: startComp.position.y };
+                            } else {
+                                // Vertical - keep X same as start
+                                endPos = { x: startComp.position.x, y: component.position.y };
+                            }
+                            
+                            // Update component position to snapped position
+                            updateComponent(component.id, { position: endPos });
+                        }
+                        
+                        const ropeLength = distance(startComp.position, endPos);
                         const newRope: Component = {
                             id: generateId('rope'),
                             type: ComponentType.ROPE,
                             position: {
-                                x: (startComp.position.x + component.position.x) / 2,
-                                y: (startComp.position.y + component.position.y) / 2,
+                                x: (startComp.position.x + endPos.x) / 2,
+                                y: (startComp.position.y + endPos.y) / 2,
                             },
                             startNodeId: ropeStartNodeId,
                             endNodeId: component.id,
                             length: ropeLength,
                             segments: [{
                                 start: startComp.position,
-                                end: component.position,
+                                end: endPos,
                                 type: 'line' as const,
                                 length: ropeLength
                             }],
