@@ -209,7 +209,9 @@ export function generateArcPath(
         y: center.y + radius * Math.sin(endAngle),
     };
 
-    const largeArc = Math.abs(endAngle - startAngle) > Math.PI ? 1 : 0;
+    // Use largeArc flag only if angle difference is > 90 degrees (PI/2)
+    // This prevents arcs from going over 180 degrees
+    const largeArc = Math.abs(endAngle - startAngle) > Math.PI / 2 ? 1 : 0;
     const sweep = direction === 'cw' ? 1 : 0;
 
     return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} ${sweep} ${end.x} ${end.y}`;

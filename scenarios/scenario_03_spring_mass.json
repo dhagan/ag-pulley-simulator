@@ -1,25 +1,34 @@
 {
   "version": "1.3.0",
-  "name": "Scenario_3_Spring_Mass_System",
-  "description": "Spring and mass system",
+  "name": "Scenario_3_Spring_Mass",
+  "description": "Mass suspended by spring",
   "gravity": 9.81,
   "components": [
     {
       "id": "anchor1",
       "type": "anchor",
-      "position": { "x": 0, "y": -200 },
+      "position": {
+        "x": 0,
+        "y": -200
+      },
       "fixed": true
     },
     {
       "id": "mass1",
       "type": "mass",
-      "position": { "x": 0, "y": 0 },
+      "position": {
+        "x": 0,
+        "y": 0
+      },
       "mass": 5
     },
     {
       "id": "spring1",
       "type": "spring",
-      "position": { "x": 0, "y": -100 },
+      "position": {
+        "x": 0,
+        "y": -100
+      },
       "startNodeId": "anchor1",
       "endNodeId": "mass1",
       "restLength": 150,

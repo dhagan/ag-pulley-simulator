@@ -1,32 +1,44 @@
 {
   "version": "1.3.0",
   "name": "Scenario_2_Atwood_Machine",
-  "description": "Two masses hanging vertically on opposite sides of a pulley",
+  "description": "Classic Atwood machine with two masses on opposite sides of pulley",
   "gravity": 9.81,
   "components": [
     {
       "id": "pulley1",
       "type": "pulley",
-      "position": { "x": 0, "y": 0 },
+      "position": {
+        "x": 0,
+        "y": 0
+      },
       "radius": 30,
       "fixed": true
     },
     {
       "id": "mass1",
       "type": "mass",
-      "position": { "x": -80, "y": 200 },
-      "mass": 10
+      "position": {
+        "x": -30,
+        "y": 200
+      },
+      "mass": 5
     },
     {
       "id": "mass2",
       "type": "mass",
-      "position": { "x": 80, "y": 200 },
+      "position": {
+        "x": 30,
+        "y": 200
+      },
       "mass": 10
     },
     {
       "id": "rope1",
       "type": "rope",
-      "position": { "x": -40, "y": 100 },
+      "position": {
+        "x": -30,
+        "y": 100
+      },
       "startNodeId": "mass1",
       "endNodeId": "pulley1",
       "length": 200
@@ -34,7 +46,10 @@
     {
       "id": "rope2",
       "type": "rope",
-      "position": { "x": 40, "y": 100 },
+      "position": {
+        "x": 30,
+        "y": 100
+      },
       "startNodeId": "pulley1",
       "endNodeId": "mass2",
       "length": 200

@@ -14,6 +14,7 @@ import {
 import { generateId, distance } from '../utils/math';
 import { buildGraph } from '../utils/graph-builder';
 import { solvePulleySystem } from '../modules/solver';
+import { loadScenarioByNumber } from '../utils/scenario-loader';
 
 interface SystemStore {
     system: SystemState;
@@ -35,6 +36,7 @@ interface SystemStore {
     toggleFBD: () => void;
     toggleLabels: () => void;
     setRopeStartNode: (nodeId: string | null) => void;
+    snapMassesToVertical: () => void;
     updateGraph: () => void;
     solve: () => void;
     reset: () => void;
@@ -119,6 +121,60 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
 
     setRopeStartNode: (nodeId) => set({ ropeStartNodeId: nodeId }),
 
+    snapMassesToVertical: () => {
+        set((state) => {
+            const { components } = state.system;
+            const updatedComponents = components.map(comp => {
+                if (comp.type !== ComponentType.MASS) return comp;
+                
+                // Find ropes/springs connected to this mass
+                const connections = components.filter(c => {
+                    if (c.type !== ComponentType.ROPE && c.type !== ComponentType.SPRING) return false;
+                    return (c as any).startNodeId === comp.id || (c as any).endNodeId === comp.id;
+                });
+                
+                if (connections.length === 0) return comp;
+                
+                // Find pulley/anchor this mass is connected to
+                for (const conn of connections) {
+                    const otherNodeId = (conn as any).startNodeId === comp.id ? (conn as any).endNodeId : (conn as any).startNodeId;
+                    const otherNode = components.find(c => c.id === otherNodeId);
+                    
+                    if (otherNode && (
+                        otherNode.type === ComponentType.PULLEY ||
+                        otherNode.type === ComponentType.PULLEY_BECKET ||
+                        otherNode.type === ComponentType.SPRING_PULLEY ||
+                        otherNode.type === ComponentType.SPRING_PULLEY_BECKET ||
+                        otherNode.type === ComponentType.ANCHOR
+                    )) {
+                        // Snap mass to be directly below the pulley/anchor on the side it's currently on
+                        const massX = comp.position.x;
+                        const nodeX = otherNode.position.x;
+                        const radius = 'radius' in otherNode ? (otherNode.radius || 0) : 0;
+                        
+                        // If mass is significantly offset, keep it on that side
+                        // Otherwise snap to vertical
+                        let newX = nodeX;
+                        if (Math.abs(massX - nodeX) > radius / 2) {
+                            // Mass is on a side, snap to +/- radius
+                            newX = massX < nodeX ? nodeX - radius : nodeX + radius;
+                        }
+                        
+                        return { ...comp, position: { ...comp.position, x: newX } };
+                    }
+                }
+                
+                return comp;
+            });
+            
+            return {
+                history: [...state.history, state.system],
+                system: { ...state.system, components: updatedComponents }
+            };
+        });
+        get().updateGraph();
+    },
+
     updateGraph: () => {
         set((state) => ({ system: { ...state.system, graph: buildGraph(get().system) } }));
     },
@@ -147,212 +203,17 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
     },
 
     createTestScenario: (scenarioNum: number) => {
-        const scenarios = [
-            // Scenario 1: Simple hanging mass
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 0, y: -200 }, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 100 }, mass: 10 },
-                ];
-                const anchor = components[0];
-                const mass = components[1];
-                components.push({
-                    id: generateId('rope'),
-                    type: ComponentType.ROPE,
-                    position: { x: 0, y: -50 },
-                    startNodeId: anchor.id,
-                    endNodeId: mass.id,
-                    length: 300,
-                    segments: [{ start: anchor.position, end: mass.position, type: 'line', length: 300 }],
-                });
-                return components;
-            },
-            // Scenario 2: Atwood machine (two masses over fixed pulley)
-            () => {
-                const components: Component[] = [
-                    { id: generateId('pulley'), type: ComponentType.PULLEY, position: { x: 0, y: -200 }, radius: 30, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -150, y: 100 }, mass: 5 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 150, y: 100 }, mass: 10 },
-                ];
-                const pulley = components[0];
-                const mass1 = components[1];
-                const mass2 = components[2];
-                components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -75, y: -50 }, startNodeId: mass1.id, endNodeId: pulley.id, length: 200, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 75, y: -50 }, startNodeId: pulley.id, endNodeId: mass2.id, length: 200, segments: [] }
-                );
-                return components;
-            },
-            // Scenario 3: Spring and mass system
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 0, y: -200 }, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 0 }, mass: 5 },
-                ];
-                const anchor = components[0];
-                const mass = components[1];
-                components.push({
-                    id: generateId('spring'),
-                    type: ComponentType.SPRING,
-                    position: { x: 0, y: -100 },
-                    startNodeId: anchor.id,
-                    endNodeId: mass.id,
-                    restLength: 150,
-                    stiffness: 100,
-                    currentLength: 200,
-                });
-                return components;
-            },
-            // Scenario 4: Two masses on spring
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 0, y: -200 }, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 0 }, mass: 8 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 150 }, mass: 12 },
-                ];
-                const anchor = components[0];
-                const mass1 = components[1];
-                const mass2 = components[2];
-                components.push(
-                    { id: generateId('spring'), type: ComponentType.SPRING, position: { x: 0, y: -100 }, startNodeId: anchor.id, endNodeId: mass1.id, restLength: 150, stiffness: 100, currentLength: 200 },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 0, y: 75 }, startNodeId: mass1.id, endNodeId: mass2.id, length: 150, segments: [] }
-                );
-                return components;
-            },
-            // Scenario 5: Y-shaped configuration
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: -150, y: -200 }, fixed: true },
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 150, y: -200 }, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 100 }, mass: 15 },
-                ];
-                const anchor1 = components[0];
-                const anchor2 = components[1];
-                const mass = components[2];
-                components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -75, y: -50 }, startNodeId: anchor1.id, endNodeId: mass.id, length: 250, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 75, y: -50 }, startNodeId: anchor2.id, endNodeId: mass.id, length: 250, segments: [] }
-                );
-                return components;
-            },
-            // Scenario 6: Horizontal force application
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: -200, y: 0 }, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 0 }, mass: 8 },
-                ];
-                const anchor = components[0];
-                const mass = components[1];
-                components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -100, y: 0 }, startNodeId: anchor.id, endNodeId: mass.id, length: 200, segments: [] },
-                    { id: generateId('force'), type: ComponentType.FORCE_VECTOR, position: { x: 0, y: 0 }, Fx: 50, Fy: 0, appliedToNodeId: mass.id }
-                );
-                return components;
-            },
-            // Scenario 7: Spring Pulley with two masses
-            () => {
-                const components: Component[] = [
-                    { id: generateId('spring_pulley'), type: ComponentType.SPRING_PULLEY, position: { x: 0, y: 0 }, radius: 30, stiffness: 50, restLength: 100, currentLength: 100, axis: 'vertical' },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -100, y: 150 }, mass: 8 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 100, y: 150 }, mass: 12 },
-                ];
-                const springPulley = components[0];
-                const mass1 = components[1];
-                const mass2 = components[2];
-                components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -50, y: 75 }, startNodeId: mass1.id, endNodeId: springPulley.id, length: 180, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 50, y: 75 }, startNodeId: springPulley.id, endNodeId: mass2.id, length: 180, segments: [] }
-                );
-                return components;
-            },
-            // Scenario 8: Pulley with becket
-            () => {
-                const components: Component[] = [
-                    { id: generateId('pulley_becket'), type: ComponentType.PULLEY_BECKET, position: { x: 0, y: -100 }, radius: 30, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -80, y: 100 }, mass: 10 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 80, y: 100 }, mass: 8 },
-                ];
-                const pulleyBecket = components[0];
-                const mass1 = components[1];
-                const mass2 = components[2];
-                components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -40, y: 0 }, startNodeId: mass1.id, endNodeId: pulleyBecket.id, length: 220, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 40, y: 0 }, startNodeId: pulleyBecket.id, endNodeId: mass2.id, length: 220, segments: [] }
-                );
-                return components;
-            },
-            // Scenario 9: Double pulley system
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: -150, y: -200 }, fixed: true },
-                    { id: generateId('pulley'), type: ComponentType.PULLEY, position: { x: 0, y: -200 }, radius: 30, fixed: true },
-                    { id: generateId('pulley'), type: ComponentType.PULLEY, position: { x: 150, y: -200 }, radius: 30, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 100 }, mass: 12 },
-                ];
-                const anchor = components[0];
-                const pulley1 = components[1];
-                const pulley2 = components[2];
-                const mass = components[3];
-                components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -75, y: -200 }, startNodeId: anchor.id, endNodeId: pulley1.id, length: 150, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 0, y: -50 }, startNodeId: pulley1.id, endNodeId: mass.id, length: 300, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 75, y: -200 }, startNodeId: pulley2.id, endNodeId: mass.id, length: 300, segments: [] }
-                );
-                return components;
-            },
-            // Scenario 10: Complex spring-mass-pulley system
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 0, y: -250 }, fixed: true },
-                    { id: generateId('pulley'), type: ComponentType.PULLEY, position: { x: 0, y: -100 }, radius: 30, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -100, y: 100 }, mass: 6 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 100, y: 100 }, mass: 9 },
-                ];
-                const anchor = components[0];
-                const pulley = components[1];
-                const mass1 = components[2];
-                const mass2 = components[3];
-                components.push(
-                    { id: generateId('spring'), type: ComponentType.SPRING, position: { x: 0, y: -175 }, startNodeId: anchor.id, endNodeId: pulley.id, restLength: 100, stiffness: 150, currentLength: 150 },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -50, y: 0 }, startNodeId: pulley.id, endNodeId: mass1.id, length: 200, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 50, y: 0 }, startNodeId: pulley.id, endNodeId: mass2.id, length: 200, segments: [] }
-                );
-                return components;
-            },
-            // Scenario 10: Maximum complexity - interconnected network
-            () => {
-                const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: -200, y: -200 }, fixed: true },
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 200, y: -200 }, fixed: true },
-                    { id: generateId('pulley'), type: ComponentType.PULLEY, position: { x: 0, y: -150 }, radius: 30, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -150, y: 50 }, mass: 4 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 100 }, mass: 8 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 150, y: 50 }, mass: 6 },
-                ];
-                const anchor1 = components[0];
-                const anchor2 = components[1];
-                const pulley = components[2];
-                const mass1 = components[3];
-                const mass2 = components[4];
-                const mass3 = components[5];
-                components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -100, y: -175 }, startNodeId: anchor1.id, endNodeId: pulley.id, length: 150, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 100, y: -175 }, startNodeId: anchor2.id, endNodeId: pulley.id, length: 150, segments: [] },
-                    { id: generateId('spring'), type: ComponentType.SPRING, position: { x: -75, y: -50 }, startNodeId: pulley.id, endNodeId: mass1.id, restLength: 150, stiffness: 120, currentLength: 200 },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 0, y: -25 }, startNodeId: pulley.id, endNodeId: mass2.id, length: 250, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 75, y: -50 }, startNodeId: pulley.id, endNodeId: mass3.id, length: 200, segments: [] },
-                    { id: generateId('force'), type: ComponentType.FORCE_VECTOR, position: { x: 0, y: 100 }, Fx: 30, Fy: -20, appliedToNodeId: mass2.id }
-                );
-                return components;
-            },
-        ];
-
-        const components = scenarios[scenarioNum - 1]();
+        // Load from JSON file using scenario loader utility
+        const loadedSystem = loadScenarioByNumber(scenarioNum);
+        if (!loadedSystem) {
+            console.error(`Scenario ${scenarioNum} not found`);
+            return;
+        }
+        
         set((state) => ({
             history: [...state.history, state.system],
-            system: { ...state.system, components },
+            system: loadedSystem,
         }));
-        get().updateGraph();
         setTimeout(() => get().solve(), 500);
     },
 
