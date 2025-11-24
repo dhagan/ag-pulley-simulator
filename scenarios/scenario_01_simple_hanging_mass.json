@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Scenario_1_Simple_Hanging_Mass",
   "description": "Single mass hanging from anchor with balancing force",
   "gravity": 9.81,
