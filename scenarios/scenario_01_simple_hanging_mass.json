@@ -1,24 +1,34 @@
 {
-  "version": "1.4.0",
-  "name": "Scenario_1_Simple_Hanging_Mass",
-  "description": "Single mass hanging vertically from anchor with balancing force",
+  "version": "1.3.0",
+  "name": "Scenario_2_Atwood_Machine",
+  "description": "Classic Atwood machine DJH",
   "gravity": 9.81,
   "components": [
     {
-      "id": "anchor1",
-      "type": "anchor",
+      "id": "pulley1",
+      "type": "pulley",
       "position": {
         "x": 0,
-        "y": -200
+        "y": 0
       },
+      "radius": 30,
       "fixed": true
     },
     {
       "id": "mass1",
       "type": "mass",
       "position": {
-        "x": 0,
-        "y": 100
+        "x": -30,
+        "y": 200
+      },
+      "mass": 5
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": {
+        "x": 30,
+        "y": 200
       },
       "mass": 10
     },
@@ -26,23 +36,23 @@
       "id": "rope1",
       "type": "rope",
       "position": {
-        "x": 0,
-        "y": -50
-      },
-      "startNodeId": "anchor1",
-      "endNodeId": "mass1",
-      "length": 300
-    },
-    {
-      "id": "force1",
-      "type": "force_vector",
-      "position": {
-        "x": 0,
+        "x": -30,
         "y": 100
       },
-      "Fx": 0,
-      "Fy": 98.10000000000001,
-      "appliedToNodeId": "mass1"
+      "startNodeId": "mass1",
+      "endNodeId": "pulley1",
+      "length": 200
+    },
+    {
+      "id": "rope2",
+      "type": "rope",
+      "position": {
+        "x": 30,
+        "y": 100
+      },
+      "startNodeId": "pulley1",
+      "endNodeId": "mass2",
+      "length": 200
     }
   ]
 }

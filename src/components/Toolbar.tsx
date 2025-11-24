@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSystemStore } from '../store/useSystemStore';
 import { Tool } from '../types';
+import { exportScenario, importScenario } from '../utils/scenario-io';
 
 export const Toolbar: React.FC = () => {
     const currentTool = useSystemStore((state) => state.ui.currentTool);
@@ -17,6 +18,31 @@ export const Toolbar: React.FC = () => {
     const reset = useSystemStore((state) => state.reset);
     const undo = useSystemStore((state) => state.undo);
     const hasHistory = useSystemStore((state) => state.history.length > 0);
+    const system = useSystemStore((state) => state.system);
+    const loadSystem = useSystemStore((state) => state.loadSystem);
+
+    const handleExport = () => {
+        const filename = prompt('Enter filename for export:', 'my_scenario.json');
+        if (filename) {
+            exportScenario(system, filename);
+        }
+    };
+
+    const handleImport = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (file) {
+                const scenario = await importScenario(file);
+                if (scenario) {
+                    loadSystem(scenario);
+                }
+            }
+        };
+        input.click();
+    };
 
     const toolButtons = [
         { tool: Tool.SELECT, label: 'Sel', icon: '⬆️' },
@@ -141,6 +167,14 @@ export const Toolbar: React.FC = () => {
                 }}
             >
                 ⏪ Undo
+            </button>
+
+            <button onClick={handleExport} title="Export current scenario to JSON file">
+                💾 Export
+            </button>
+
+            <button onClick={handleImport} title="Import scenario from JSON file">
+                📁 Import
             </button>
 
             <button onClick={reset} style={{ background: 'var(--color-accent-red)', color: 'white' }}>
