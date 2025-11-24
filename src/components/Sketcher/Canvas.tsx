@@ -247,6 +247,38 @@ export const Canvas: React.FC = () => {
                 newPos = snapToGrid(currentPos, gridSize);
             }
 
+            // Snap masses to vertical alignment with pulleys
+            const draggedComp = system.components.find(c => c.id === draggedComponentId);
+            if (draggedComp && draggedComp.type === ComponentType.MASS) {
+                // Find nearest pulley
+                const pulleys = system.components.filter(c => 
+                    c.type === ComponentType.PULLEY || 
+                    c.type === ComponentType.PULLEY_BECKET ||
+                    c.type === ComponentType.SPRING_PULLEY ||
+                    c.type === ComponentType.SPRING_PULLEY_BECKET
+                );
+                
+                // Check if mass is connected to a pulley via rope
+                const connectedRopes = system.components.filter(c => 
+                    c.type === ComponentType.ROPE && 
+                    (c.startNodeId === draggedComponentId || c.endNodeId === draggedComponentId)
+                );
+                
+                for (const rope of connectedRopes) {
+                    if (rope.type !== ComponentType.ROPE) continue;
+                    const otherEndId = rope.startNodeId === draggedComponentId ? rope.endNodeId : rope.startNodeId;
+                    const pulley = pulleys.find(p => p.id === otherEndId);
+                    
+                    if (pulley) {
+                        // Snap to vertical if within 50px horizontally
+                        const dx = Math.abs(newPos.x - pulley.position.x);
+                        if (dx < 50) {
+                            newPos.x = pulley.position.x;
+                        }
+                    }
+                }
+            }
+
             updateComponent(draggedComponentId, { position: newPos });
             return;
         }

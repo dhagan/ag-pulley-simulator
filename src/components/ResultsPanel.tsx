@@ -104,8 +104,50 @@ export const ResultsPanel: React.FC = () => {
                         <span className="text-secondary">Masses:</span>
                         <span>{components.filter(c => c.type === 'mass').length}</span>
                     </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span className="text-secondary">Pulleys:</span>
+                        <span>{components.filter(c => c.type === 'pulley' || c.type === 'pulley_becket' || c.type === 'spring_pulley' || c.type === 'spring_pulley_becket').length}</span>
+                    </div>
                 </div>
             </div>
+
+            {/* Mechanical Advantage (Purchase) */}
+            {mechanicalAdvantage && (
+                <>
+                    <div style={{ width: '100%', height: '1px', background: 'var(--color-border)' }} />
+                    <div style={{
+                        padding: 'var(--spacing-sm)',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: 'var(--radius-md)',
+                    }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 'var(--spacing-sm)', color: 'rgb(16, 185, 129)' }}>
+                            ⚙️ Mechanical Advantage (Purchase)
+                        </h3>
+                        <div className="font-mono text-sm" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span className="text-secondary">Ideal MA:</span>
+                                <span style={{ fontWeight: 600 }}>{mechanicalAdvantage.mechanicalAdvantage.toFixed(2)}:1</span>
+                            </div>
+                            {mechanicalAdvantage.effortForce > 0 && (
+                                <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span className="text-secondary">Effort Force:</span>
+                                        <span>{mechanicalAdvantage.effortForce.toFixed(2)} N</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span className="text-secondary">Load Force:</span>
+                                        <span>{mechanicalAdvantage.loadForce.toFixed(2)} N</span>
+                                    </div>
+                                </>
+                            )}
+                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-xs)' }}>
+                                {mechanicalAdvantage.explanation}
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Equation System Diagnostics */}
             {equationSystem && (
