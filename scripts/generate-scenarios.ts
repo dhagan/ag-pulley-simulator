@@ -72,19 +72,19 @@ function generateScenario01(): Scenario {
     };
 }
 
-// Scenario 2: Atwood machine - masses on SEPARATE SIDES, hanging VERTICALLY
+// Scenario 2: Atwood machine - ONE continuous rope over pulley
 function generateScenario02(): Scenario {
-    const pulley: Point = { x: 0, y: 0 };
+    const pulley: Point = { x: 0, y: -100 }; // Pulley ABOVE the masses
     const pulleyRadius = 30;
     
-    // Masses far apart horizontally, same depth, hanging vertically
-    const mass1: Point = { x: -100, y: 200 };
-    const mass2: Point = { x: 100, y: 200 };
+    // Masses at same height, horizontally separated
+    const mass1: Point = { x: -150, y: 200 };
+    const mass2: Point = { x: 150, y: 200 };
     
     return {
         version: "1.4.0",
         name: "Scenario_2_Atwood_Machine",
-        description: "Atwood machine: masses hang vertically on opposite sides (no crossing)",
+        description: "Atwood machine: rope from mass1 up over pulley down to mass2",
         gravity: 9.81,
         components: [
             {
@@ -109,18 +109,10 @@ function generateScenario02(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: mass1.x, y: 100 },
+                position: { x: 0, y: 50 },
                 startNodeId: "mass1",
-                endNodeId: "pulley1",
-                length: 250
-            },
-            {
-                id: "rope2",
-                type: "rope",
-                position: { x: mass2.x, y: 100 },
-                startNodeId: "pulley1",
                 endNodeId: "mass2",
-                length: 250
+                length: 650
             }
         ]
     };
