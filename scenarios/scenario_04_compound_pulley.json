@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_4_Compound_Pulley",
-  "description": "Compound pulley system with balancing force",
+  "description": "Compound pulley: anchor-pulley-mass all vertically aligned",
   "gravity": 9.81,
   "components": [
     {
@@ -53,17 +53,6 @@
       "startNodeId": "pulley1",
       "endNodeId": "mass1",
       "length": 200
-    },
-    {
-      "id": "force1",
-      "type": "force_vector",
-      "position": {
-        "x": 0,
-        "y": 100
-      },
-      "Fx": 0,
-      "Fy": 196.20000000000002,
-      "appliedToNodeId": "mass1"
     }
   ]
 }

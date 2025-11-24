@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_5_Y_Configuration",
-  "description": "Y-shaped configuration with two anchors (intentional angles)",
+  "description": "Y-shaped: two anchors supporting one mass (intentional angles)",
   "gravity": 9.81,
   "components": [
     {

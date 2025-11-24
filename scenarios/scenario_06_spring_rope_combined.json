@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_6_Spring_Rope_Combined",
-  "description": "Two masses connected by spring and rope in vertical chain",
+  "description": "Vertical chain: anchor-spring-mass1-rope-mass2",
   "gravity": 9.81,
   "components": [
     {

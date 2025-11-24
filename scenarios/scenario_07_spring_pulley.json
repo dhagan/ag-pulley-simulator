@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_7_Spring_Pulley",
-  "description": "Spring pulley with masses on opposite sides (Atwood style)",
+  "description": "Spring pulley with masses hanging vertically on opposite sides",
   "gravity": 9.81,
   "components": [
     {
@@ -21,7 +21,7 @@
       "id": "mass1",
       "type": "mass",
       "position": {
-        "x": -30,
+        "x": -100,
         "y": 150
       },
       "mass": 8
@@ -30,7 +30,7 @@
       "id": "mass2",
       "type": "mass",
       "position": {
-        "x": 30,
+        "x": 100,
         "y": 150
       },
       "mass": 12
@@ -39,23 +39,23 @@
       "id": "rope1",
       "type": "rope",
       "position": {
-        "x": -30,
+        "x": -100,
         "y": 75
       },
       "startNodeId": "mass1",
       "endNodeId": "springPulley1",
-      "length": 150
+      "length": 200
     },
     {
       "id": "rope2",
       "type": "rope",
       "position": {
-        "x": 30,
+        "x": 100,
         "y": 75
       },
       "startNodeId": "springPulley1",
       "endNodeId": "mass2",
-      "length": 150
+      "length": 200
     }
   ]
 }

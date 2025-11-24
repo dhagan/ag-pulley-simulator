@@ -1,5 +1,6 @@
 /**
  * Generate all test scenarios with correct physics and geometry
+ * Key principle: Masses hang VERTICALLY on their side - no crossing
  */
 
 interface Point {
@@ -30,12 +31,13 @@ function distance(p1: Point, p2: Point): number {
 function generateScenario01(): Scenario {
     const anchor: Point = { x: 0, y: -200 };
     const mass: Point = { x: 0, y: 100 };
-    const massWeight = 10 * 9.81; // Force to balance
+    const massValue = 10;
+    const massWeight = massValue * 9.81;
     
     return {
         version: "1.4.0",
         name: "Scenario_1_Simple_Hanging_Mass",
-        description: "Single mass hanging from anchor with balancing force",
+        description: "Single mass hanging vertically from anchor with balancing force",
         gravity: 9.81,
         components: [
             {
@@ -48,12 +50,12 @@ function generateScenario01(): Scenario {
                 id: "mass1",
                 type: "mass",
                 position: mass,
-                mass: 10
+                mass: massValue
             },
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: (anchor.x + mass.x) / 2, y: (anchor.y + mass.y) / 2 },
+                position: { x: 0, y: (anchor.y + mass.y) / 2 },
                 startNodeId: "anchor1",
                 endNodeId: "mass1",
                 length: distance(anchor, mass)
@@ -70,25 +72,19 @@ function generateScenario01(): Scenario {
     };
 }
 
-// Scenario 2: Atwood machine - masses on opposite sides of pulley
+// Scenario 2: Atwood machine - masses on SEPARATE SIDES, hanging VERTICALLY
 function generateScenario02(): Scenario {
     const pulley: Point = { x: 0, y: 0 };
     const pulleyRadius = 30;
     
-    // Masses hang from opposite sides of pulley (offset by radius)
-    // LEFT mass on LEFT side, RIGHT mass on RIGHT side - NO CROSSING
-    const mass1: Point = { x: -pulleyRadius, y: 200 };
-    const mass2: Point = { x: pulleyRadius, y: 200 };
-    
-    // Rope from LEFT mass goes UP to LEFT side of pulley
-    const pulleyLeft: Point = { x: -pulleyRadius, y: pulley.y };
-    // Rope from RIGHT mass goes UP to RIGHT side of pulley
-    const pulleyRight: Point = { x: pulleyRadius, y: pulley.y };
+    // Masses far apart horizontally, same depth, hanging vertically
+    const mass1: Point = { x: -100, y: 200 };
+    const mass2: Point = { x: 100, y: 200 };
     
     return {
         version: "1.4.0",
         name: "Scenario_2_Atwood_Machine",
-        description: "Classic Atwood machine with two masses on opposite sides of pulley",
+        description: "Atwood machine: masses hang vertically on opposite sides (no crossing)",
         gravity: 9.81,
         components: [
             {
@@ -113,18 +109,18 @@ function generateScenario02(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: mass1.x, y: (pulleyLeft.y + mass1.y) / 2 },
+                position: { x: mass1.x, y: 100 },
                 startNodeId: "mass1",
                 endNodeId: "pulley1",
-                length: distance(mass1, pulleyLeft)
+                length: 250
             },
             {
                 id: "rope2",
                 type: "rope",
-                position: { x: mass2.x, y: (pulleyRight.y + mass2.y) / 2 },
+                position: { x: mass2.x, y: 100 },
                 startNodeId: "pulley1",
                 endNodeId: "mass2",
-                length: distance(pulleyRight, mass2)
+                length: 250
             }
         ]
     };
@@ -138,7 +134,7 @@ function generateScenario03(): Scenario {
     return {
         version: "1.4.0",
         name: "Scenario_3_Spring_Mass",
-        description: "Mass suspended by spring",
+        description: "Mass suspended vertically by spring",
         gravity: 9.81,
         components: [
             {
@@ -167,17 +163,16 @@ function generateScenario03(): Scenario {
     };
 }
 
-// Scenario 4: Compound pulley - anchor above pulley above mass (all vertical)
+// Scenario 4: Compound pulley - all vertical
 function generateScenario04(): Scenario {
     const anchor: Point = { x: 0, y: -200 };
     const pulley: Point = { x: 0, y: -100 };
     const mass: Point = { x: 0, y: 100 };
-    const massWeight = 20 * 9.81;
     
     return {
         version: "1.4.0",
         name: "Scenario_4_Compound_Pulley",
-        description: "Compound pulley system with balancing force",
+        description: "Compound pulley: anchor-pulley-mass all vertically aligned",
         gravity: 9.81,
         components: [
             {
@@ -214,14 +209,6 @@ function generateScenario04(): Scenario {
                 startNodeId: "pulley1",
                 endNodeId: "mass1",
                 length: distance(pulley, mass)
-            },
-            {
-                id: "force1",
-                type: "force_vector",
-                position: mass,
-                Fx: 0,
-                Fy: massWeight,
-                appliedToNodeId: "mass1"
             }
         ]
     };
@@ -236,7 +223,7 @@ function generateScenario05(): Scenario {
     return {
         version: "1.4.0",
         name: "Scenario_5_Y_Configuration",
-        description: "Y-shaped configuration with two anchors (intentional angles)",
+        description: "Y-shaped: two anchors supporting one mass (intentional angles)",
         gravity: 9.81,
         components: [
             {
@@ -286,7 +273,7 @@ function generateScenario06(): Scenario {
     return {
         version: "1.4.0",
         name: "Scenario_6_Spring_Rope_Combined",
-        description: "Two masses connected by spring and rope in vertical chain",
+        description: "Vertical chain: anchor-spring-mass1-rope-mass2",
         gravity: 9.81,
         components: [
             {
@@ -329,21 +316,18 @@ function generateScenario06(): Scenario {
     };
 }
 
-// Scenario 7: Spring pulley with masses on opposite sides (Atwood style)
+// Scenario 7: Spring pulley - masses on opposite sides, vertical drops
 function generateScenario07(): Scenario {
     const springPulley: Point = { x: 0, y: 0 };
     const pulleyRadius = 30;
     
-    // Masses on opposite sides - NO CROSSING
-    const mass1: Point = { x: -pulleyRadius, y: 150 };
-    const mass2: Point = { x: pulleyRadius, y: 150 };
-    const pulleyLeft: Point = { x: -pulleyRadius, y: springPulley.y };
-    const pulleyRight: Point = { x: pulleyRadius, y: springPulley.y };
+    const mass1: Point = { x: -100, y: 150 };
+    const mass2: Point = { x: 100, y: 150 };
     
     return {
         version: "1.4.0",
         name: "Scenario_7_Spring_Pulley",
-        description: "Spring pulley with masses on opposite sides (Atwood style)",
+        description: "Spring pulley with masses hanging vertically on opposite sides",
         gravity: 9.81,
         components: [
             {
@@ -371,18 +355,18 @@ function generateScenario07(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: mass1.x, y: (pulleyLeft.y + mass1.y) / 2 },
+                position: { x: mass1.x, y: 75 },
                 startNodeId: "mass1",
                 endNodeId: "springPulley1",
-                length: distance(mass1, pulleyLeft)
+                length: 200
             },
             {
                 id: "rope2",
                 type: "rope",
-                position: { x: mass2.x, y: (pulleyRight.y + mass2.y) / 2 },
+                position: { x: mass2.x, y: 75 },
                 startNodeId: "springPulley1",
                 endNodeId: "mass2",
-                length: distance(pulleyRight, mass2)
+                length: 200
             }
         ]
     };
@@ -422,7 +406,7 @@ function generateScenario08(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: 0, y: (pulley.y + mass1.y) / 2 },
+                position: { x: 0, y: 25 },
                 startNodeId: "pulleyBecket1",
                 endNodeId: "mass1",
                 length: distance(pulley, mass1)
@@ -430,7 +414,7 @@ function generateScenario08(): Scenario {
             {
                 id: "rope2",
                 type: "rope",
-                position: { x: 0, y: (mass1.y + mass2.y) / 2 },
+                position: { x: 0, y: 200 },
                 startNodeId: "mass1",
                 endNodeId: "mass2",
                 length: distance(mass1, mass2)
@@ -444,16 +428,13 @@ function generateScenario09(): Scenario {
     const pulley1: Point = { x: -100, y: -200 };
     const pulley2: Point = { x: 100, y: -200 };
     
-    // Each mass hangs vertically below its pulley
     const mass1: Point = { x: -100, y: 150 };
     const mass2: Point = { x: 100, y: 150 };
-    const mass1Weight = 6 * 9.81;
-    const mass2Weight = 9 * 9.81;
     
     return {
         version: "1.4.0",
         name: "Scenario_9_Double_Pulley",
-        description: "Two separate pulley systems with balancing forces",
+        description: "Two independent pulley systems, each with vertical drops",
         gravity: 9.81,
         components: [
             {
@@ -485,34 +466,18 @@ function generateScenario09(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: mass1.x, y: (pulley1.y + mass1.y) / 2 },
-                startNodeId: "pulley1",
-                endNodeId: "mass1",
+                position: { x: mass1.x, y: -25 },
+                startNodeId: "mass1",
+                endNodeId: "pulley1",
                 length: distance(mass1, pulley1)
             },
             {
                 id: "rope2",
                 type: "rope",
-                position: { x: mass2.x, y: (pulley2.y + mass2.y) / 2 },
+                position: { x: mass2.x, y: -25 },
                 startNodeId: "pulley2",
                 endNodeId: "mass2",
                 length: distance(pulley2, mass2)
-            },
-            {
-                id: "force1",
-                type: "force_vector",
-                position: mass1,
-                Fx: 0,
-                Fy: mass1Weight,
-                appliedToNodeId: "mass1"
-            },
-            {
-                id: "force2",
-                type: "force_vector",
-                position: mass2,
-                Fx: 0,
-                Fy: mass2Weight,
-                appliedToNodeId: "mass2"
             }
         ]
     };
@@ -522,14 +487,13 @@ function generateScenario09(): Scenario {
 function generateScenario10(): Scenario {
     const anchor1: Point = { x: -100, y: -150 };
     const pulley1: Point = { x: 0, y: -100 };
-    const mass1: Point = { x: -100, y: 100 };  // Below anchor1
-    const mass2: Point = { x: 0, y: 150 };     // Below pulley1
-    const mass2Weight = 8 * 9.81;
+    const mass1: Point = { x: -100, y: 100 };
+    const mass2: Point = { x: 0, y: 150 };
     
     return {
         version: "1.4.0",
         name: "Scenario_10_Complex_Network",
-        description: "Complex network with vertical connections and balancing force",
+        description: "Complex network with vertical connections",
         gravity: 9.81,
         components: [
             {
@@ -570,18 +534,67 @@ function generateScenario10(): Scenario {
             {
                 id: "rope1",
                 type: "rope",
-                position: { x: 0, y: (pulley1.y + mass2.y) / 2 },
+                position: { x: 0, y: 25 },
                 startNodeId: "pulley1",
                 endNodeId: "mass2",
                 length: distance(pulley1, mass2)
+            }
+        ]
+    };
+}
+
+// Scenario 11: Spring pulley becket - Atwood style with spring support
+function generateScenario11(): Scenario {
+    const springPulleyBecket: Point = { x: 0, y: 0 };
+    const pulleyRadius = 30;
+    
+    const mass1: Point = { x: -100, y: 150 };
+    const mass2: Point = { x: 100, y: 150 };
+    
+    return {
+        version: "1.4.0",
+        name: "Scenario_11_Spring_Pulley_Becket",
+        description: "Spring pulley becket with masses on opposite sides",
+        gravity: 9.81,
+        components: [
+            {
+                id: "springPulleyBecket1",
+                type: "spring_pulley_becket",
+                position: springPulleyBecket,
+                radius: pulleyRadius,
+                stiffness: 50,
+                restLength: 100,
+                currentLength: 100,
+                axis: "vertical",
+                fixed: true
             },
             {
-                id: "force1",
-                type: "force_vector",
+                id: "mass1",
+                type: "mass",
+                position: mass1,
+                mass: 8
+            },
+            {
+                id: "mass2",
+                type: "mass",
                 position: mass2,
-                Fx: 0,
-                Fy: mass2Weight,
-                appliedToNodeId: "mass2"
+                mass: 12
+            },
+            {
+                id: "rope1",
+                type: "rope",
+                position: { x: mass1.x, y: 75 },
+                startNodeId: "mass1",
+                endNodeId: "springPulleyBecket1",
+                length: 200
+            },
+            {
+                id: "rope2",
+                type: "rope",
+                position: { x: mass2.x, y: 75 },
+                startNodeId: "springPulleyBecket1",
+                endNodeId: "mass2",
+                length: 200
             }
         ]
     };
@@ -598,7 +611,8 @@ const scenarios = [
     generateScenario07(),
     generateScenario08(),
     generateScenario09(),
-    generateScenario10()
+    generateScenario10(),
+    generateScenario11()
 ];
 
 // Write to files
@@ -614,4 +628,5 @@ scenarios.forEach((scenario, index) => {
     console.log(`✅ Generated: ${filename}`);
 });
 
-console.log('\n🎯 All scenarios generated successfully!');
+console.log('\n🎯 All 11 scenarios generated successfully!');
+console.log('📋 Key principle: Masses hang VERTICALLY on their side - no rope crossing!');
