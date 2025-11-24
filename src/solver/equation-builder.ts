@@ -15,9 +15,14 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
         }
     });
 
-    // Add spring force unknowns
+    // Add spring force unknowns (but not for internal springs of spring pulleys)
     graph.edges.forEach((edge) => {
         if (edge.type === 'spring') {
+            // Skip internal springs of spring pulleys (they have IDs ending with _spring)
+            if (edge.id.endsWith('_spring')) {
+                // Internal spring pulley spring - force is known from Hooke's law
+                return;
+            }
             const forceVar = `F_spring_${edge.id}`;
             unknownIndex.set(forceVar, unknowns.length);
             unknowns.push(forceVar);
@@ -99,11 +104,25 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                         eqY[tensionIdx] = sign * dirY;
                     }
                 } else if (edge.type === 'spring') {
-                    const forceIdx = unknownIndex.get(`F_spring_${edge.id}`);
-                    if (forceIdx !== undefined) {
+                    // Check if this is an internal spring pulley spring
+                    if (edge.id.endsWith('_spring') && edge.stiffness !== undefined && edge.restLength !== undefined) {
+                        // Internal spring - force is known from Hooke's law: F = k * (currentLength - restLength)
+                        const currentLength = Math.sqrt(
+                            Math.pow(endNode.position.x - startNode.position.x, 2) +
+                            Math.pow(endNode.position.y - startNode.position.y, 2)
+                        );
+                        const springForce = edge.stiffness * (currentLength - edge.restLength);
                         const sign = isStart ? 1 : -1;
-                        eqX[forceIdx] = sign * dirX;
-                        eqY[forceIdx] = sign * dirY;
+                        constX -= sign * dirX * springForce; // Move to constant side
+                        constY -= sign * dirY * springForce;
+                    } else {
+                        // Regular spring - force is an unknown
+                        const forceIdx = unknownIndex.get(`F_spring_${edge.id}`);
+                        if (forceIdx !== undefined) {
+                            const sign = isStart ? 1 : -1;
+                            eqX[forceIdx] = sign * dirX;
+                            eqY[forceIdx] = sign * dirY;
+                        }
                     }
                 }
             });

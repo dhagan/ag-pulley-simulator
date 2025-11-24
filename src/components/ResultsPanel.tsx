@@ -31,7 +31,7 @@ export const ResultsPanel: React.FC = () => {
     const isUnderdetermined = numEquations < numUnknowns;
 
     // Calculate mechanical advantage if system is solved
-    const mechanicalAdvantage = solverResult.solved ? calculateMechanicalAdvantage(system, solverResult) : null;
+    const mechanicalAdvantage = solverResult?.solved ? calculateMechanicalAdvantage(system, solverResult) : null;
 
     return (
         <div
@@ -287,7 +287,7 @@ export const ResultsPanel: React.FC = () => {
                             Solver Results
                         </h3>
 
-                        {solverResult.solved ? (
+                        {solverResult?.solved ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
                                 {/* Mechanical Advantage */}
                                 {mechanicalAdvantage && (
@@ -458,7 +458,7 @@ export const ResultsPanel: React.FC = () => {
                                 borderRadius: 'var(--radius-sm)',
                             }}>
                                 <p className="text-sm" style={{ color: 'var(--color-accent-red)' }}>
-                                    {solverResult.error || 'Unable to solve system'}
+                                    {solverResult?.error || 'Unable to solve system'}
                                 </p>
                             </div>
                         )}

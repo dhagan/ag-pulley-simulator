@@ -54,7 +54,7 @@ export const Toolbar: React.FC = () => {
                     backgroundClip: 'text',
                     margin: 0,
                 }}>
-                    Pulley System Analyzer
+                    Pulley Solver
                 </h1>
                 <div style={{
                     padding: '4px 8px',
