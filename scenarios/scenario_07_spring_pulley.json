@@ -1,0 +1,46 @@
+{
+  "version": "1.3.0",
+  "name": "Scenario_7_Spring_Pulley_System",
+  "description": "Spring pulley with two masses",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "springPulley1",
+      "type": "spring_pulley",
+      "position": { "x": 0, "y": 0 },
+      "radius": 30,
+      "stiffness": 50,
+      "restLength": 100,
+      "currentLength": 100,
+      "axis": "vertical"
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": { "x": -100, "y": 150 },
+      "mass": 8
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": { "x": 100, "y": 150 },
+      "mass": 12
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": { "x": -50, "y": 75 },
+      "startNodeId": "mass1",
+      "endNodeId": "springPulley1",
+      "length": 180
+    },
+    {
+      "id": "rope2",
+      "type": "rope",
+      "position": { "x": 50, "y": 75 },
+      "startNodeId": "springPulley1",
+      "endNodeId": "mass2",
+      "length": 180
+    }
+  ]
+}

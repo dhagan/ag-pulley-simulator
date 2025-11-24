@@ -4,6 +4,8 @@ import { solveLinearSystem } from '../matrix-solver';
 
 describe('Matrix Solver', () => {
     it('solves square system correctly', () => {
+        // System: 2x + y = 5, x + 3y = 8
+        // Solution: x = 1.4, y = 2.2
         const eqSystem = {
             A: [[2, 1], [1, 3]],
             b: [5, 8],
@@ -13,8 +15,8 @@ describe('Matrix Solver', () => {
         const result = solveLinearSystem(eqSystem);
 
         expect(result.solved).toBe(true);
-        expect(result.solution[0]).toBeCloseTo(1, 5);
-        expect(result.solution[1]).toBeCloseTo(3, 5);
+        expect(result.solution[0]).toBeCloseTo(1.4, 5);
+        expect(result.solution[1]).toBeCloseTo(2.2, 5);
     });
 
     it('solves overdetermined system using least squares', () => {

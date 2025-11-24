@@ -3,6 +3,9 @@ import { useSystemStore } from '../../store/useSystemStore';
 import { Grid } from './Grid';
 import { Anchor } from './ComponentLibrary/Anchor';
 import { Pulley } from './ComponentLibrary/Pulley';
+import { PulleyBecket } from './ComponentLibrary/PulleyBecket';
+import { SpringPulley } from './ComponentLibrary/SpringPulley';
+import { SpringPulleyBecket } from './ComponentLibrary/SpringPulleyBecket';
 import { Mass } from './ComponentLibrary/Mass';
 import { Rope } from './ComponentLibrary/Rope';
 import { Spring } from './ComponentLibrary/Spring';
@@ -167,6 +170,39 @@ export const Canvas: React.FC = () => {
                         fixed: true,
                     };
                     break;
+                case Tool.ADD_PULLEY_BECKET:
+                    newComponent = {
+                        id: generateId('pulley_becket'),
+                        type: ComponentType.PULLEY_BECKET,
+                        position: snappedPos,
+                        radius: 30,
+                        fixed: true,
+                    };
+                    break;
+                case Tool.ADD_SPRING_PULLEY:
+                    newComponent = {
+                        id: generateId('spring_pulley'),
+                        type: ComponentType.SPRING_PULLEY,
+                        position: snappedPos,
+                        radius: 30,
+                        stiffness: 100,
+                        restLength: 100,
+                        currentLength: 100,
+                        axis: 'vertical',
+                    };
+                    break;
+                case Tool.ADD_SPRING_PULLEY_BECKET:
+                    newComponent = {
+                        id: generateId('spring_pulley_becket'),
+                        type: ComponentType.SPRING_PULLEY_BECKET,
+                        position: snappedPos,
+                        radius: 30,
+                        stiffness: 100,
+                        restLength: 100,
+                        currentLength: 100,
+                        axis: 'vertical',
+                    };
+                    break;
                 case Tool.ADD_MASS:
                     newComponent = {
                         id: generateId('mass'),
@@ -268,20 +304,115 @@ export const Canvas: React.FC = () => {
                 } else if (ropeStartNodeId !== component.id) {
                     const startComp = system.components.find(c => c.id === ropeStartNodeId);
                     if (startComp) {
-                        const ropeLength = distance(startComp.position, component.position);
+                        // Get end position, optionally constrained
+                        let endPos = component.position;
+                        
+                        // Auto-align vertically if one end is a mass and the other is pulley/anchor
+                        const startIsPulleyOrAnchor = startComp.type === ComponentType.PULLEY || 
+                                                      startComp.type === ComponentType.PULLEY_BECKET ||
+                                                      startComp.type === ComponentType.SPRING_PULLEY ||
+                                                      startComp.type === ComponentType.SPRING_PULLEY_BECKET ||
+                                                      startComp.type === ComponentType.ANCHOR;
+                        const endIsPulleyOrAnchor = component.type === ComponentType.PULLEY || 
+                                                    component.type === ComponentType.PULLEY_BECKET ||
+                                                    component.type === ComponentType.SPRING_PULLEY ||
+                                                    component.type === ComponentType.SPRING_PULLEY_BECKET ||
+                                                    component.type === ComponentType.ANCHOR;
+                        const startIsMass = startComp.type === ComponentType.MASS;
+                        const endIsMass = component.type === ComponentType.MASS;
+                        
+                        // If connecting mass to pulley/anchor, force vertical alignment
+                        if ((startIsMass && endIsPulleyOrAnchor) || (endIsMass && startIsPulleyOrAnchor)) {
+                            // Force vertical alignment - mass takes X position of pulley/anchor
+                            if (startIsMass && endIsPulleyOrAnchor) {
+                                // Start is mass, end is pulley/anchor - align mass to pulley X
+                                updateComponent(startComp.id, { position: { x: endPos.x, y: startComp.position.y } });
+                                // Re-fetch after update
+                                const updatedStart = system.components.find(c => c.id === ropeStartNodeId);
+                                if (updatedStart) {
+                                    const ropeLength = distance(updatedStart.position, endPos);
+                                    const newRope: Component = {
+                                        id: generateId('rope'),
+                                        type: ComponentType.ROPE,
+                                        position: {
+                                            x: (updatedStart.position.x + endPos.x) / 2,
+                                            y: (updatedStart.position.y + endPos.y) / 2,
+                                        },
+                                        startNodeId: ropeStartNodeId,
+                                        endNodeId: component.id,
+                                        length: ropeLength,
+                                        segments: [{
+                                            start: updatedStart.position,
+                                            end: endPos,
+                                            type: 'line' as const,
+                                            length: ropeLength
+                                        }],
+                                    };
+                                    addComponent(newRope);
+                                }
+                            } else if (endIsMass && startIsPulleyOrAnchor) {
+                                // End is mass, start is pulley/anchor - align mass to pulley X
+                                endPos = { x: startComp.position.x, y: component.position.y };
+                                updateComponent(component.id, { position: endPos });
+                                
+                                const ropeLength = distance(startComp.position, endPos);
+                                const newRope: Component = {
+                                    id: generateId('rope'),
+                                    type: ComponentType.ROPE,
+                                    position: {
+                                        x: (startComp.position.x + endPos.x) / 2,
+                                        y: (startComp.position.y + endPos.y) / 2,
+                                    },
+                                    startNodeId: ropeStartNodeId,
+                                    endNodeId: component.id,
+                                    length: ropeLength,
+                                    segments: [{
+                                        start: startComp.position,
+                                        end: endPos,
+                                        type: 'line' as const,
+                                        length: ropeLength
+                                    }],
+                                };
+                                addComponent(newRope);
+                            }
+                            setRopeStartNode(null);
+                            selectComponent(null);
+                            setTool(Tool.SELECT);
+                            return; // Exit early since we handled it
+                        }
+                        
+                        // If Shift key is held, snap to vertical or horizontal
+                        if (e.shiftKey) {
+                            const dx = Math.abs(component.position.x - startComp.position.x);
+                            const dy = Math.abs(component.position.y - startComp.position.y);
+                            
+                            // Snap to dominant axis
+                            if (dx > dy) {
+                                // Horizontal - keep Y same as start
+                                endPos = { x: component.position.x, y: startComp.position.y };
+                            } else {
+                                // Vertical - keep X same as start
+                                endPos = { x: startComp.position.x, y: component.position.y };
+                            }
+                            
+                            // Update component position to snapped position
+                            updateComponent(component.id, { position: endPos });
+                        }
+                        
+                        const ropeLength = distance(startComp.position, endPos);
                         const newRope: Component = {
                             id: generateId('rope'),
                             type: ComponentType.ROPE,
                             position: {
-                                x: (startComp.position.x + component.position.x) / 2,
-                                y: (startComp.position.y + component.position.y) / 2,
+                                x: (startComp.position.x + endPos.x) / 2,
+                                y: (startComp.position.y + endPos.y) / 2,
                             },
                             startNodeId: ropeStartNodeId,
                             endNodeId: component.id,
                             length: ropeLength,
                             segments: [{
                                 start: startComp.position,
-                                end: component.position,
+                                end: endPos,
                                 type: 'line' as const,
                                 length: ropeLength
                             }],
@@ -337,6 +468,12 @@ export const Canvas: React.FC = () => {
                 return <Anchor key={component.id} anchor={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.PULLEY:
                 return <Pulley key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
+            case ComponentType.PULLEY_BECKET:
+                return <PulleyBecket key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
+            case ComponentType.SPRING_PULLEY:
+                return <SpringPulley key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
+            case ComponentType.SPRING_PULLEY_BECKET:
+                return <SpringPulleyBecket key={component.id} pulley={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.MASS:
                 return <Mass key={component.id} mass={component} isSelected={isSelected} onClick={handleClick} />;
             case ComponentType.ROPE:
@@ -382,6 +519,87 @@ export const Canvas: React.FC = () => {
             >
                 <Grid gridSize={gridSize} viewBox={viewBox} />
                 {system.components.map(renderComponent)}
+
+                {/* Render becket attachment points when adding rope/spring */}
+                {(currentTool === Tool.ADD_ROPE || currentTool === Tool.ADD_SPRING) && system.components.map(component => {
+                    if (component.type === ComponentType.PULLEY_BECKET || component.type === ComponentType.SPRING_PULLEY_BECKET) {
+                        const becketNodeId = `${component.id}_becket`;
+                        const becketPos = { x: component.position.x, y: component.position.y + component.radius + 12 };
+                        const isSelected = ropeStartNodeId === becketNodeId;
+                        
+                        return (
+                            <g key={`${component.id}_becket_point`}>
+                                <circle
+                                    cx={becketPos.x}
+                                    cy={becketPos.y}
+                                    r={8}
+                                    fill={isSelected ? 'var(--color-accent-cyan)' : 'var(--color-mass)'}
+                                    stroke="var(--color-border)"
+                                    strokeWidth={2}
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (currentTool === Tool.ADD_ROPE) {
+                                            if (!ropeStartNodeId) {
+                                                setRopeStartNode(becketNodeId);
+                                            } else if (ropeStartNodeId !== becketNodeId) {
+                                                const startNodeId = ropeStartNodeId;
+                                                const startIsRegularComponent = system.components.find(c => c.id === startNodeId);
+                                                const startIsBecket = startNodeId.endsWith('_becket');
+                                                
+                                                let startPos = becketPos;
+                                                if (startIsRegularComponent) {
+                                                    startPos = startIsRegularComponent.position;
+                                                } else if (startIsBecket) {
+                                                    const parentId = startNodeId.replace('_becket', '');
+                                                    const parentComp = system.components.find(c => c.id === parentId);
+                                                    if (parentComp && 'radius' in parentComp) {
+                                                        startPos = { x: parentComp.position.x, y: parentComp.position.y + parentComp.radius + 12 };
+                                                    }
+                                                }
+                                                
+                                                const ropeLength = distance(startPos, becketPos);
+                                                const newRope: Component = {
+                                                    id: generateId('rope'),
+                                                    type: ComponentType.ROPE,
+                                                    position: {
+                                                        x: (startPos.x + becketPos.x) / 2,
+                                                        y: (startPos.y + becketPos.y) / 2,
+                                                    },
+                                                    startNodeId,
+                                                    endNodeId: becketNodeId,
+                                                    length: ropeLength,
+                                                    segments: [{
+                                                        start: startPos,
+                                                        end: becketPos,
+                                                        type: 'line' as const,
+                                                        length: ropeLength
+                                                    }],
+                                                };
+                                                addComponent(newRope);
+                                                setRopeStartNode(null);
+                                                setTool(Tool.SELECT);
+                                            }
+                                        }
+                                    }}
+                                />
+                                {isSelected && (
+                                    <circle
+                                        cx={becketPos.x}
+                                        cy={becketPos.y}
+                                        r={12}
+                                        fill="none"
+                                        stroke="var(--color-accent-cyan)"
+                                        strokeWidth={2}
+                                        strokeDasharray="4 4"
+                                        style={{ pointerEvents: 'none' }}
+                                    />
+                                )}
+                            </g>
+                        );
+                    }
+                    return null;
+                })}
 
                 <FBDLayer />
 
@@ -444,14 +662,17 @@ export const Canvas: React.FC = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '4px',
-                        minWidth: '150px',
+                        minWidth: '120px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
                     }}
                 >
-                    <div style={{ padding: '4px 8px', fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 'bold' }}>Add Component</div>
+                    <div style={{ padding: '2px 6px', fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: 'bold' }}>Add</div>
                     {[
                         { type: ComponentType.ANCHOR, label: 'Anchor', icon: '⚓' },
                         { type: ComponentType.PULLEY, label: 'Pulley', icon: '⭕' },
+                        { type: ComponentType.PULLEY_BECKET, label: 'P+Becket', icon: '🪝' },
+                        { type: ComponentType.SPRING_PULLEY, label: 'Spr-P', icon: '🔧' },
+                        { type: ComponentType.SPRING_PULLEY_BECKET, label: 'SP+Becket', icon: '⚙️' },
                         { type: ComponentType.MASS, label: 'Mass', icon: '⚖️' },
                         { type: ComponentType.SPRING, label: 'Spring', icon: '🌀' },
                         { type: ComponentType.ROPE, label: 'Rope', icon: '〰️' },

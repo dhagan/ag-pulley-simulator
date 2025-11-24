@@ -20,7 +20,7 @@ export function solvePulleySystem(system: SystemState): SolverResult {
     });
 
     // Validate graph structure
-    const graphValidation = validateGraph(graph);
+    const graphValidation = validateGraph(graph, system);
     if (!graphValidation.valid) {
         console.error('❌ PSAT SOLVER: Graph invalid', graphValidation.errors);
         return createErrorResult(`Graph validation failed: ${graphValidation.errors.join(', ')}`);

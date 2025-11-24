@@ -1,5 +1,5 @@
 import React from 'react';
-import { Rope as RopeType, ComponentType } from '../../../types';
+import { Rope as RopeType } from '../../../types';
 import { useSystemStore } from '../../../store/useSystemStore';
 import { generateRopePathFromSegments } from '../../../modules/solver/rope-router';
 
@@ -9,37 +9,30 @@ interface RopeProps {
     onClick: () => void;
 }
 
-function getPulleyTangentPoint(
-    pulleyPos: { x: number; y: number },
-    pulleyRadius: number,
-    externalPoint: { x: number; y: number }
-): { x: number; y: number } {
-    const dx = externalPoint.x - pulleyPos.x;
-    const dy = externalPoint.y - pulleyPos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < 0.01) {
-        // Points are essentially the same, return point on circumference
-        return { x: pulleyPos.x + pulleyRadius, y: pulleyPos.y };
-    }
-
-    // Calculate the point on the circumference along the line to external point
-    const angle = Math.atan2(dy, dx);
-    return {
-        x: pulleyPos.x + pulleyRadius * Math.cos(angle),
-        y: pulleyPos.y + pulleyRadius * Math.sin(angle)
-    };
-}
-
 export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
     const system = useSystemStore((state) => state.system);
     const components = system.components;
     const ropeSegments = system.graph.ropeSegments;
 
-    const startComp = components.find(c => c.id === rope.startNodeId);
-    const endComp = components.find(c => c.id === rope.endNodeId);
+    // Handle both regular component IDs and becket node IDs
+    const getNodePosition = (nodeId: string) => {
+        // Check if it's a becket node
+        if (nodeId.endsWith('_becket')) {
+            const parentId = nodeId.replace('_becket', '');
+            const parentComp = components.find(c => c.id === parentId);
+            if (parentComp && 'radius' in parentComp) {
+                return { x: parentComp.position.x, y: parentComp.position.y + parentComp.radius + 12 };
+            }
+        }
+        // Regular component
+        const comp = components.find(c => c.id === nodeId);
+        return comp ? comp.position : null;
+    };
 
-    if (!startComp || !endComp) return null;
+    const startPos = getNodePosition(rope.startNodeId);
+    const endPos = getNodePosition(rope.endNodeId);
+
+    if (!startPos || !endPos) return null;
 
     // Use smart routing segments if available
     const segments = ropeSegments.get(rope.id);
@@ -71,19 +64,7 @@ export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
         );
     }
     
-    // Fallback to simple line rendering with tangent points
-    let startPos = startComp.position;
-    let endPos = endComp.position;
-
-    // For pulleys, calculate tangent point on circumference
-    if (startComp.type === ComponentType.PULLEY && 'radius' in startComp) {
-        startPos = getPulleyTangentPoint(startComp.position, startComp.radius, endComp.position);
-    }
-
-    if (endComp.type === ComponentType.PULLEY && 'radius' in endComp) {
-        endPos = getPulleyTangentPoint(endComp.position, endComp.radius, startComp.position);
-    }
-
+    // Fallback to simple line rendering
     return (
         <g onClick={onClick} style={{ cursor: 'pointer' }}>
             <line

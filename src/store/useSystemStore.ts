@@ -33,6 +33,7 @@ interface SystemStore {
     toggleSnapToGrid: () => void;
     toggleShowForces: () => void;
     toggleFBD: () => void;
+    toggleLabels: () => void;
     setRopeStartNode: (nodeId: string | null) => void;
     updateGraph: () => void;
     solve: () => void;
@@ -62,6 +63,7 @@ const initialUIState: UIState = {
     showGrid: true,
     showForces: true,
     showFBD: false,
+    showLabels: true,
     animationEnabled: false,
 };
 
@@ -112,6 +114,8 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
     toggleShowForces: () => set((state) => ({ ui: { ...state.ui, showForces: !state.ui.showForces } })),
 
     toggleFBD: () => set((state) => ({ ui: { ...state.ui, showFBD: !state.ui.showFBD } })),
+
+    toggleLabels: () => set((state) => ({ ui: { ...state.ui, showLabels: !state.ui.showLabels } })),
 
     setRopeStartNode: (nodeId) => set({ ropeStartNodeId: nodeId }),
 
@@ -245,26 +249,39 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
                 );
                 return components;
             },
-            // Scenario 7: Three masses in series
+            // Scenario 7: Spring Pulley with two masses
             () => {
                 const components: Component[] = [
-                    { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 0, y: -200 }, fixed: true },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: -50 }, mass: 3 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 50 }, mass: 5 },
-                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 0, y: 150 }, mass: 7 },
+                    { id: generateId('spring_pulley'), type: ComponentType.SPRING_PULLEY, position: { x: 0, y: 0 }, radius: 30, stiffness: 50, restLength: 100, currentLength: 100, axis: 'vertical' },
+                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -100, y: 150 }, mass: 8 },
+                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 100, y: 150 }, mass: 12 },
                 ];
-                const anchor = components[0];
+                const springPulley = components[0];
                 const mass1 = components[1];
                 const mass2 = components[2];
-                const mass3 = components[3];
                 components.push(
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 0, y: -125 }, startNodeId: anchor.id, endNodeId: mass1.id, length: 150, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 0, y: 0 }, startNodeId: mass1.id, endNodeId: mass2.id, length: 100, segments: [] },
-                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 0, y: 100 }, startNodeId: mass2.id, endNodeId: mass3.id, length: 100, segments: [] }
+                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -50, y: 75 }, startNodeId: mass1.id, endNodeId: springPulley.id, length: 180, segments: [] },
+                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 50, y: 75 }, startNodeId: springPulley.id, endNodeId: mass2.id, length: 180, segments: [] }
                 );
                 return components;
             },
-            // Scenario 8: Double pulley system
+            // Scenario 8: Pulley with becket
+            () => {
+                const components: Component[] = [
+                    { id: generateId('pulley_becket'), type: ComponentType.PULLEY_BECKET, position: { x: 0, y: -100 }, radius: 30, fixed: true },
+                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: -80, y: 100 }, mass: 10 },
+                    { id: generateId('mass'), type: ComponentType.MASS, position: { x: 80, y: 100 }, mass: 8 },
+                ];
+                const pulleyBecket = components[0];
+                const mass1 = components[1];
+                const mass2 = components[2];
+                components.push(
+                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: -40, y: 0 }, startNodeId: mass1.id, endNodeId: pulleyBecket.id, length: 220, segments: [] },
+                    { id: generateId('rope'), type: ComponentType.ROPE, position: { x: 40, y: 0 }, startNodeId: pulleyBecket.id, endNodeId: mass2.id, length: 220, segments: [] }
+                );
+                return components;
+            },
+            // Scenario 9: Double pulley system
             () => {
                 const components: Component[] = [
                     { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: -150, y: -200 }, fixed: true },
@@ -283,7 +300,7 @@ export const useSystemStore = create<SystemStore>((set, get) => ({
                 );
                 return components;
             },
-            // Scenario 9: Complex spring-mass-pulley system
+            // Scenario 10: Complex spring-mass-pulley system
             () => {
                 const components: Component[] = [
                     { id: generateId('anchor'), type: ComponentType.ANCHOR, position: { x: 0, y: -250 }, fixed: true },

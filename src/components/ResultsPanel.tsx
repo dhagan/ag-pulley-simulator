@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useSystemStore } from '../store/useSystemStore';
 import { buildGraph } from '../utils/graph-builder';
 import { buildEquationSystem } from '../solver/equation-builder';
+import { calculateMechanicalAdvantage } from '../utils/mechanical-advantage';
+import { validatePhysicsConstraints } from '../utils/physics-validation';
 
 export const ResultsPanel: React.FC = () => {
     const solverResult = useSystemStore((state) => state.solverResult);
@@ -9,6 +11,9 @@ export const ResultsPanel: React.FC = () => {
     const components = useSystemStore((state) => state.system.components);
     const system = useSystemStore((state) => state.system);
     const [showEquations, setShowEquations] = useState(false);
+
+    // Validate physics constraints
+    const physicsWarnings = validatePhysicsConstraints(system);
 
     // Build equation system for display
     let equationSystem: any = null;
@@ -22,8 +27,11 @@ export const ResultsPanel: React.FC = () => {
 
     const numUnknowns = equationSystem?.unknowns?.length || 0;
     const numEquations = equationSystem?.A?.length || 0;
-    const isOverconstrained = numEquations > numUnknowns;
-    const isUnderconstrained = numEquations < numUnknowns;
+    const isOverdetermined = numEquations > numUnknowns;
+    const isUnderdetermined = numEquations < numUnknowns;
+
+    // Calculate mechanical advantage if system is solved
+    const mechanicalAdvantage = solverResult?.solved ? calculateMechanicalAdvantage(system, solverResult) : null;
 
     return (
         <div
@@ -57,6 +65,25 @@ export const ResultsPanel: React.FC = () => {
                 🧮 Solve System
             </button>
 
+            {/* Physics Warnings */}
+            {physicsWarnings.length > 0 && (
+                <div style={{
+                    padding: 'var(--spacing-sm)',
+                    background: 'rgba(251, 191, 36, 0.1)',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                    borderRadius: 'var(--radius-md)',
+                }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 'var(--spacing-xs)', color: 'rgb(251, 191, 36)' }}>
+                        ⚠️ Physics Warnings
+                    </div>
+                    {physicsWarnings.map((warning, idx) => (
+                        <div key={idx} style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>
+                            {warning.message}
+                        </div>
+                    ))}
+                </div>
+            )}
+
             <div style={{ width: '100%', height: '1px', background: 'var(--color-border)' }} />
 
             {/* System Info */}
@@ -77,8 +104,50 @@ export const ResultsPanel: React.FC = () => {
                         <span className="text-secondary">Masses:</span>
                         <span>{components.filter(c => c.type === 'mass').length}</span>
                     </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span className="text-secondary">Pulleys:</span>
+                        <span>{components.filter(c => c.type === 'pulley' || c.type === 'pulley_becket' || c.type === 'spring_pulley' || c.type === 'spring_pulley_becket').length}</span>
+                    </div>
                 </div>
             </div>
+
+            {/* Mechanical Advantage (Purchase) */}
+            {mechanicalAdvantage && (
+                <>
+                    <div style={{ width: '100%', height: '1px', background: 'var(--color-border)' }} />
+                    <div style={{
+                        padding: 'var(--spacing-sm)',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        borderRadius: 'var(--radius-md)',
+                    }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 'var(--spacing-sm)', color: 'rgb(16, 185, 129)' }}>
+                            ⚙️ Mechanical Advantage (Purchase)
+                        </h3>
+                        <div className="font-mono text-sm" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span className="text-secondary">Ideal MA:</span>
+                                <span style={{ fontWeight: 600 }}>{mechanicalAdvantage.mechanicalAdvantage.toFixed(2)}:1</span>
+                            </div>
+                            {mechanicalAdvantage.effortForce > 0 && (
+                                <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span className="text-secondary">Effort Force:</span>
+                                        <span>{mechanicalAdvantage.effortForce.toFixed(2)} N</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span className="text-secondary">Load Force:</span>
+                                        <span>{mechanicalAdvantage.loadForce.toFixed(2)} N</span>
+                                    </div>
+                                </>
+                            )}
+                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-xs)' }}>
+                                {mechanicalAdvantage.explanation}
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Equation System Diagnostics */}
             {equationSystem && (
@@ -112,11 +181,22 @@ export const ResultsPanel: React.FC = () => {
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <span className="text-secondary">Equations:</span>
-                                <span style={{ color: isOverconstrained ? 'var(--color-accent-red)' : isUnderconstrained ? 'var(--color-accent-yellow)' : 'inherit' }}>
+                                <span style={{ color: isOverdetermined ? 'var(--color-accent-cyan)' : isUnderdetermined ? 'var(--color-accent-red)' : 'inherit' }}>
                                     {numEquations}
                                 </span>
                             </div>
-                            {isOverconstrained && (
+                            {isOverdetermined && (
+                                <div style={{
+                                    padding: '8px',
+                                    background: 'rgba(6, 182, 212, 0.1)',
+                                    border: '1px solid var(--color-accent-cyan)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem'
+                                }}>
+                                    ℹ️ OVERDETERMINED: {numEquations - numUnknowns} extra equation(s) - using least squares
+                                </div>
+                            )}
+                            {isUnderdetermined && (
                                 <div style={{
                                     padding: '8px',
                                     background: 'rgba(239, 68, 68, 0.1)',
@@ -124,18 +204,7 @@ export const ResultsPanel: React.FC = () => {
                                     borderRadius: '4px',
                                     fontSize: '0.75rem'
                                 }}>
-                                    ⚠️ OVERCONSTRAINED: {numEquations - numUnknowns} extra equation(s)
-                                </div>
-                            )}
-                            {isUnderconstrained && (
-                                <div style={{
-                                    padding: '8px',
-                                    background: 'rgba(234, 179, 8, 0.1)',
-                                    border: '1px solid var(--color-accent-yellow)',
-                                    borderRadius: '4px',
-                                    fontSize: '0.75rem'
-                                }}>
-                                    ⚠️ UNDERCONSTRAINED: Need {numUnknowns - numEquations} more equation(s)
+                                    ⚠️ UNDERDETERMINED: Need {numUnknowns - numEquations} more equation(s)
                                 </div>
                             )}
                         </div>
@@ -218,8 +287,50 @@ export const ResultsPanel: React.FC = () => {
                             Solver Results
                         </h3>
 
-                        {solverResult.solved ? (
+                        {solverResult?.solved ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                                {/* Mechanical Advantage */}
+                                {mechanicalAdvantage && (
+                                    <div style={{
+                                        padding: 'var(--spacing-md)',
+                                        background: 'rgba(34, 197, 94, 0.1)',
+                                        border: '1px solid var(--color-accent-green)',
+                                        borderRadius: 'var(--radius-md)',
+                                    }}>
+                                        <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 'var(--spacing-sm)', color: 'var(--color-accent-green)' }}>
+                                            ⚙️ Mechanical Advantage (Purchase)
+                                        </h4>
+                                        <div className="font-mono text-sm" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span className="text-secondary">MA Ratio:</span>
+                                                <span style={{ fontWeight: 600, color: 'var(--color-accent-green)' }}>
+                                                    {mechanicalAdvantage.mechanicalAdvantage.toFixed(2)}:1
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span className="text-secondary">Load Force:</span>
+                                                <span>{mechanicalAdvantage.loadForce.toFixed(2)} N</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span className="text-secondary">Effort Force:</span>
+                                                <span>{mechanicalAdvantage.effortForce.toFixed(2)} N</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span className="text-secondary">Velocity Ratio:</span>
+                                                <span>{mechanicalAdvantage.velocityRatio.toFixed(2)}:1</span>
+                                            </div>
+                                            <div style={{ marginTop: 'var(--spacing-xs)', paddingTop: 'var(--spacing-xs)', borderTop: '1px solid var(--color-border)' }}>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                                                    {mechanicalAdvantage.explanation}
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                                                    {mechanicalAdvantage.components.pulleyConfiguration}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Rope Analysis */}
                                 {solverResult.ropeSegmentAnalysis && solverResult.ropeSegmentAnalysis.size > 0 && (
                                     <div>
@@ -347,7 +458,7 @@ export const ResultsPanel: React.FC = () => {
                                 borderRadius: 'var(--radius-sm)',
                             }}>
                                 <p className="text-sm" style={{ color: 'var(--color-accent-red)' }}>
-                                    {solverResult.error || 'Unable to solve system'}
+                                    {solverResult?.error || 'Unable to solve system'}
                                 </p>
                             </div>
                         )}

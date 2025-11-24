@@ -1,21 +1,21 @@
 import React from 'react';
-import { Pulley as PulleyType } from '../../../types';
+import { PulleyBecket as PulleyBecketType } from '../../../types';
 import { useSystemStore } from '../../../store/useSystemStore';
 
-interface PulleyProps {
-    pulley: PulleyType;
+interface PulleyBecketProps {
+    pulley: PulleyBecketType;
     isSelected: boolean;
     onClick: () => void;
 }
 
-export const Pulley: React.FC<PulleyProps> = ({ pulley, isSelected, onClick }) => {
+export const PulleyBecket: React.FC<PulleyBecketProps> = ({ pulley, isSelected, onClick }) => {
     const showLabels = useSystemStore((state) => state.ui.showLabels);
     
     return (
         <g
             onClick={onClick}
             style={{ cursor: 'pointer' }}
-            className="pulley"
+            className="pulley-becket"
         >
             {/* Main pulley wheel */}
             <circle
@@ -46,7 +46,7 @@ export const Pulley: React.FC<PulleyProps> = ({ pulley, isSelected, onClick }) =
                 fill="var(--color-anchor)"
             />
 
-            {/* Fixed indicator (always shown for fixed pulleys) */}
+            {/* Fixed indicator */}
             <rect
                 x={pulley.position.x - 8}
                 y={pulley.position.y - pulley.radius - 15}
@@ -56,6 +56,24 @@ export const Pulley: React.FC<PulleyProps> = ({ pulley, isSelected, onClick }) =
                 stroke="var(--color-anchor)"
                 strokeWidth={1}
             />
+
+            {/* Becket attachment point (hook at bottom) */}
+            <g>
+                <circle
+                    cx={pulley.position.x}
+                    cy={pulley.position.y + pulley.radius + 8}
+                    r={4}
+                    fill="var(--color-mass)"
+                    stroke="var(--color-border)"
+                    strokeWidth={1}
+                />
+                <path
+                    d={`M ${pulley.position.x},${pulley.position.y + pulley.radius + 5} 
+                        L ${pulley.position.x},${pulley.position.y + pulley.radius + 12}`}
+                    stroke="var(--color-mass)"
+                    strokeWidth={2}
+                />
+            </g>
 
             {/* Selection circle */}
             {isSelected && (
@@ -74,7 +92,7 @@ export const Pulley: React.FC<PulleyProps> = ({ pulley, isSelected, onClick }) =
             {showLabels && (
                 <text
                     x={pulley.position.x}
-                    y={pulley.position.y + pulley.radius + 20}
+                    y={pulley.position.y + pulley.radius + 25}
                     textAnchor="middle"
                     fill="var(--color-text-secondary)"
                     fontSize="10"

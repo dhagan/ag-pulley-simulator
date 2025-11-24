@@ -1,0 +1,44 @@
+{
+  "version": "1.3.0",
+  "name": "Scenario_6_Spring_Rope_Combined",
+  "description": "Combined spring and rope system",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "anchor1",
+      "type": "anchor",
+      "position": { "x": 0, "y": -200 },
+      "fixed": true
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": { "x": 0, "y": 0 },
+      "mass": 8
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": { "x": 0, "y": 150 },
+      "mass": 6
+    },
+    {
+      "id": "spring1",
+      "type": "spring",
+      "position": { "x": 0, "y": -100 },
+      "startNodeId": "anchor1",
+      "endNodeId": "mass1",
+      "restLength": 150,
+      "stiffness": 80,
+      "currentLength": 200
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": { "x": 0, "y": 75 },
+      "startNodeId": "mass1",
+      "endNodeId": "mass2",
+      "length": 150
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mass as MassType } from '../../../types';
+import { useSystemStore } from '../../../store/useSystemStore';
 
 interface MassProps {
     mass: MassType;
@@ -10,6 +11,7 @@ interface MassProps {
 export const Mass: React.FC<MassProps> = ({ mass, isSelected, onClick }) => {
     const width = 40;
     const height = 40;
+    const showLabels = useSystemStore((state) => state.ui.showLabels);
 
     return (
         <g
@@ -75,6 +77,20 @@ export const Mass: React.FC<MassProps> = ({ mass, isSelected, onClick }) => {
                     strokeDasharray="5,5"
                     rx={5}
                 />
+            )}
+
+            {/* ID label */}
+            {showLabels && (
+                <text
+                    x={mass.position.x}
+                    y={mass.position.y + height / 2 + 20}
+                    textAnchor="middle"
+                    fill="var(--color-text-secondary)"
+                    fontSize="10"
+                    fontFamily="monospace"
+                >
+                    {mass.id}
+                </text>
             )}
         </g>
     );

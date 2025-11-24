@@ -1,5 +1,6 @@
 import React from 'react';
 import { Anchor as AnchorType } from '../../../types';
+import { useSystemStore } from '../../../store/useSystemStore';
 
 interface AnchorProps {
     anchor: AnchorType;
@@ -9,6 +10,7 @@ interface AnchorProps {
 
 export const Anchor: React.FC<AnchorProps> = ({ anchor, isSelected, onClick }) => {
     const size = 15;
+    const showLabels = useSystemStore((state) => state.ui.showLabels);
 
     return (
         <g
@@ -48,6 +50,20 @@ export const Anchor: React.FC<AnchorProps> = ({ anchor, isSelected, onClick }) =
                     strokeWidth={1}
                     strokeDasharray="3,3"
                 />
+            )}
+
+            {/* ID label */}
+            {showLabels && (
+                <text
+                    x={anchor.position.x}
+                    y={anchor.position.y + size + 20}
+                    textAnchor="middle"
+                    fill="var(--color-text-secondary)"
+                    fontSize="10"
+                    fontFamily="monospace"
+                >
+                    {anchor.id}
+                </text>
             )}
         </g>
     );

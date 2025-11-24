@@ -37,7 +37,7 @@ export function solvePulleySystem(system: SystemState): SolverResult {
     const graph = buildGraph(system);
     console.log('🔍 SOLVER: Graph built', { nodes: graph.nodes.size, edges: graph.edges.size });
 
-    const graphValidation = validateGraph(graph);
+    const graphValidation = validateGraph(graph, system);
     if (!graphValidation.valid) {
         console.error('❌ SOLVER: Graph invalid', graphValidation.errors);
         return {
