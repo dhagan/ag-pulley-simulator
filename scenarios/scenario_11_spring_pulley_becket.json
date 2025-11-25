@@ -1,0 +1,62 @@
+{
+  "version": "1.4.0",
+  "name": "Scenario_11_Spring_Pulley_Becket",
+  "description": "Spring pulley becket with masses on opposite sides",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "springPulleyBecket1",
+      "type": "spring_pulley_becket",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "radius": 30,
+      "stiffness": 50,
+      "restLength": 100,
+      "currentLength": 100,
+      "axis": "vertical",
+      "fixed": true
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": {
+        "x": -100,
+        "y": 150
+      },
+      "mass": 8
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "mass": 12
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": {
+        "x": -100,
+        "y": 75
+      },
+      "startNodeId": "mass1",
+      "endNodeId": "springPulleyBecket1",
+      "length": 200
+    },
+    {
+      "id": "rope2",
+      "type": "rope",
+      "position": {
+        "x": 100,
+        "y": 75
+      },
+      "startNodeId": "springPulleyBecket1",
+      "endNodeId": "mass2",
+      "length": 200
+    }
+  ]
+}

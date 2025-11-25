@@ -6,10 +6,67 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
     const constants: number[] = [];
     const unknownIndex = new Map<string, number>();
 
-    // Add tension unknowns for each rope
-    graph.edges.forEach((edge) => {
+    // ROPE CHAINING LOGIC
+    // Group connected ropes into chains (continuous ropes passing over pulleys)
+    const ropeChains = new Map<string, string>(); // ropeId -> chainId
+    const chainIds: string[] = [];
+
+    // Helper to find root of a rope in the union-find structure
+    const findChain = (ropeId: string): string => {
+        if (!ropeChains.has(ropeId)) {
+            ropeChains.set(ropeId, ropeId);
+            chainIds.push(ropeId);
+        }
+        if (ropeChains.get(ropeId) === ropeId) return ropeId;
+        const root = findChain(ropeChains.get(ropeId)!);
+        ropeChains.set(ropeId, root);
+        return root;
+    };
+
+    // Helper to merge two chains
+    const unionChains = (rope1: string, rope2: string) => {
+        const root1 = findChain(rope1);
+        const root2 = findChain(rope2);
+        if (root1 !== root2) {
+            ropeChains.set(root2, root1);
+            // Remove root2 from chainIds if present (optional, just for cleanliness)
+            const idx = chainIds.indexOf(root2);
+            if (idx !== -1) chainIds.splice(idx, 1);
+        }
+    };
+
+    // Initialize all ropes as their own chains
+    graph.edges.forEach(edge => {
         if (edge.type === 'rope') {
-            const tensionVar = `T_${edge.id}`;
+            findChain(edge.id);
+        }
+    });
+
+    // Connect ropes passing over pulleys
+    graph.nodes.forEach(node => {
+        const pulleyComponent = system.components.find(c => c.id === node.id && (c.type === 'pulley' || c.type === 'pulley_becket'));
+
+        // Only fixed pulleys connect ropes into a single chain (equal tension)
+        if (pulleyComponent) {
+            const connectedRopes: string[] = [];
+            graph.edges.forEach(edge => {
+                if (edge.type === 'rope' && (edge.startNodeId === node.id || edge.endNodeId === node.id)) {
+                    connectedRopes.push(edge.id);
+                }
+            });
+
+            // If 2 ropes connect to a pulley, they are part of the same chain
+            if (connectedRopes.length === 2) {
+                unionChains(connectedRopes[0], connectedRopes[1]);
+            }
+        }
+    });
+
+    // Add tension unknowns for each CHAIN (not each rope)
+    chainIds.forEach(chainId => {
+        // Double check this is a root
+        if (ropeChains.get(chainId) === chainId) {
+            const tensionVar = `T_chain_${chainId}`; // Use the root rope ID as the chain ID
             unknownIndex.set(tensionVar, unknowns.length);
             unknowns.push(tensionVar);
         }
@@ -57,7 +114,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                     if (segments && segments.length > 0) {
                         // Get the first or last segment depending on which end of the rope this node is
                         const relevantSegment = isStart ? segments[0] : segments[segments.length - 1];
-                        
+
                         // Calculate direction from the relevant segment endpoint to the node
                         if (isStart) {
                             // For start node, direction is from segment.start towards the rope
@@ -68,10 +125,11 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                             dirX = dx / length;
                             dirY = dy / length;
                         } else {
-                            // For end node, direction is from the rope towards segment.end
+                            // For end node, direction is from the node (segment.end) towards the rope (segment.start)
+                            // Tension pulls the node towards the start of the segment
                             const lastSeg = relevantSegment;
-                            const dx = lastSeg.end.x - lastSeg.start.x;
-                            const dy = lastSeg.end.y - lastSeg.start.y;
+                            const dx = lastSeg.start.x - lastSeg.end.x;
+                            const dy = lastSeg.start.y - lastSeg.end.y;
                             const length = Math.sqrt(dx * dx + dy * dy);
                             if (length === 0) return;
                             dirX = dx / length;
@@ -97,11 +155,15 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 }
 
                 if (edge.type === 'rope') {
-                    const tensionIdx = unknownIndex.get(`T_${edge.id}`);
+                    // Find the chain this rope belongs to
+                    const rootChainId = findChain(edge.id);
+                    const tensionIdx = unknownIndex.get(`T_chain_${rootChainId}`);
+
                     if (tensionIdx !== undefined) {
-                        const sign = isStart ? 1 : -1;
-                        eqX[tensionIdx] = sign * dirX;
-                        eqY[tensionIdx] = sign * dirY;
+                        // We calculated the specific direction vector for this node above
+                        // so we add it directly (sign = 1)
+                        eqX[tensionIdx] = dirX;
+                        eqY[tensionIdx] = dirY;
                     }
                 } else if (edge.type === 'spring') {
                     // Check if this is an internal spring pulley spring
@@ -141,10 +203,10 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
 
             // Add force balance equations: ΣF = 0
             // Only add equations that have at least one non-zero coefficient or non-zero constant
-            const hasConnectedEdges = Array.from(graph.edges.values()).some(e => 
+            const hasConnectedEdges = Array.from(graph.edges.values()).some(e =>
                 e.startNodeId === node.id || e.endNodeId === node.id
             );
-            
+
             if (hasConnectedEdges) {
                 // Check if X equation is non-trivial (has non-zero coefficients or constant)
                 const hasNonZeroX = eqX.some(c => Math.abs(c) > 1e-10) || Math.abs(constX) > 1e-10;
@@ -152,7 +214,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                     equations.push(eqX);
                     constants.push(constX);
                 }
-                
+
                 // Check if Y equation is non-trivial (has non-zero coefficients or constant)
                 const hasNonZeroY = eqY.some(c => Math.abs(c) > 1e-10) || Math.abs(constY) > 1e-10;
                 if (hasNonZeroY) {
@@ -163,38 +225,8 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
         }
     });
 
-    // Add pulley constraints: For massless, frictionless pulleys, tensions on both sides are equal
-    graph.nodes.forEach((node) => {
-        const pulleyComponent = system.components.find(c => c.id === node.id && (c.type === 'pulley' || c.type === 'spring_pulley' || c.type === 'pulley_becket' || c.type === 'spring_pulley_becket'));
-        
-        // Only fixed pulleys have equal tension constraint
-        if (pulleyComponent && (pulleyComponent.type === 'pulley' || pulleyComponent.type === 'pulley_becket')) {
-            // Find all ropes connected to this pulley
-            const connectedRopes: string[] = [];
-            graph.edges.forEach((edge) => {
-                if (edge.type === 'rope' && (edge.startNodeId === node.id || edge.endNodeId === node.id)) {
-                    connectedRopes.push(edge.id);
-                }
-            });
-
-            // For each pair of ropes, add constraint T1 = T2 (or T1 - T2 = 0)
-            if (connectedRopes.length === 2) {
-                const eq = new Array(unknowns.length).fill(0);
-                const idx1 = unknownIndex.get(`T_${connectedRopes[0]}`);
-                const idx2 = unknownIndex.get(`T_${connectedRopes[1]}`);
-                
-                if (idx1 !== undefined && idx2 !== undefined) {
-                    eq[idx1] = 1;
-                    eq[idx2] = -1;
-                    equations.push(eq);
-                    constants.push(0);
-                }
-            }
-        }
-        
-        // Spring pulleys are movable, no equal tension constraint
-        // They're handled by force balance equations like masses
-    });
+    // Note: We no longer need explicit pulley constraint equations (T1 = T2)
+    // because we are using the same unknown variable for both ropes in the chain.
 
     return { A: equations, b: constants, unknowns };
 }
@@ -213,9 +245,9 @@ export function validateEquationSystem(eqSystem: EquationSystem): { valid: boole
 
     if (numEquations < numUnknowns) {
         const deficit = numUnknowns - numEquations;
-        return { 
-            valid: false, 
-            error: `Underdetermined: ${deficit} more unknown(s) than equation(s) - system needs more constraints` 
+        return {
+            valid: false,
+            error: `Underdetermined: ${deficit} more unknown(s) than equation(s) - system needs more constraints`
         };
     }
 

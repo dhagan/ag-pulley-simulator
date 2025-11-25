@@ -1,0 +1,61 @@
+{
+  "version": "1.4.0",
+  "name": "Scenario_7_Spring_Pulley",
+  "description": "Spring pulley with masses hanging vertically on opposite sides",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "springPulley1",
+      "type": "spring_pulley",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "radius": 30,
+      "stiffness": 50,
+      "restLength": 100,
+      "currentLength": 100,
+      "axis": "vertical"
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": {
+        "x": -100,
+        "y": 150
+      },
+      "mass": 8
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "mass": 12
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": {
+        "x": -100,
+        "y": 75
+      },
+      "startNodeId": "mass1",
+      "endNodeId": "springPulley1",
+      "length": 200
+    },
+    {
+      "id": "rope2",
+      "type": "rope",
+      "position": {
+        "x": 100,
+        "y": 75
+      },
+      "startNodeId": "springPulley1",
+      "endNodeId": "mass2",
+      "length": 200
+    }
+  ]
+}

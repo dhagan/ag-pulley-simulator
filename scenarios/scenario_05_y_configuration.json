@@ -1,0 +1,57 @@
+{
+  "version": "1.4.0",
+  "name": "Scenario_5_Y_Configuration",
+  "description": "Y-shaped: two anchors supporting one mass (intentional angles)",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "anchor1",
+      "type": "anchor",
+      "position": {
+        "x": -150,
+        "y": -200
+      },
+      "fixed": true
+    },
+    {
+      "id": "anchor2",
+      "type": "anchor",
+      "position": {
+        "x": 150,
+        "y": -200
+      },
+      "fixed": true
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": {
+        "x": 0,
+        "y": 100
+      },
+      "mass": 15
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": {
+        "x": -75,
+        "y": -50
+      },
+      "startNodeId": "anchor1",
+      "endNodeId": "mass1",
+      "length": 335.4101966249685
+    },
+    {
+      "id": "rope2",
+      "type": "rope",
+      "position": {
+        "x": 75,
+        "y": -50
+      },
+      "startNodeId": "anchor2",
+      "endNodeId": "mass1",
+      "length": 335.4101966249685
+    }
+  ]
+}

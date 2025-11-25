@@ -17,7 +17,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
     // =========================================================================
     // STEP 1: Define unknowns
     // =========================================================================
-    
+
     // Tension unknowns for each continuous rope path
     // Note: Rope through multiple pulleys has SINGLE tension (inextensible)
     const ropeTensionMap = buildRopeTensionMap(graph);
@@ -50,7 +50,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
     // =========================================================================
     // STEP 2: Force equilibrium equations (ΣF = 0)
     // =========================================================================
-    
+
     graph.nodes.forEach((node) => {
         if (!node.isFixed) {
             const { eqX, eqY, constX, constY } = buildForceEquilibrium(
@@ -60,7 +60,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 unknownIndex,
                 unknowns.length
             );
-            
+
             equations.push(eqX);
             constants.push(constX);
             equations.push(eqY);
@@ -71,15 +71,15 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
     // =========================================================================
     // STEP 3: Rope inextensibility constraints
     // =========================================================================
-    
+
     // For ropes wrapping around pulleys, the total length must remain constant
     // This couples the positions of nodes connected by the rope
     graph.ropeSegments.forEach((segments, ropeId) => {
         const ropeEdge = graph.edges.get(ropeId);
         if (!ropeEdge) return;
-        
+
         const wrapsAroundPulleys = segments.some(seg => seg.type === 'arc');
-        
+
         if (wrapsAroundPulleys) {
             const constraint = buildRopeLengthConstraint(
                 ropeId,
@@ -88,7 +88,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 unknownIndex,
                 unknowns.length
             );
-            
+
             if (constraint) {
                 equations.push(constraint.equation);
                 constants.push(constraint.constant);
@@ -99,7 +99,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
     // =========================================================================
     // STEP 4: Pulley torque balance (for movable pulleys)
     // =========================================================================
-    
+
     system.components.forEach((component) => {
         if (component.type === 'pulley' && !component.fixed) {
             const torqueConstraint = buildPulleyTorqueConstraint(
@@ -108,7 +108,7 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
                 unknownIndex,
                 unknowns.length
             );
-            
+
             if (torqueConstraint) {
                 equations.push(torqueConstraint.equation);
                 constants.push(torqueConstraint.constant);
@@ -124,14 +124,14 @@ export function buildEquationSystem(graph: Graph, system: SystemState): Equation
  */
 function buildRopeTensionMap(graph: Graph): Map<string, string> {
     const tensionMap = new Map<string, string>();
-    
+
     graph.edges.forEach((edge) => {
         if (edge.type === 'rope') {
             const tensionVar = `T_${edge.id}`;
             tensionMap.set(edge.id, tensionVar);
         }
     });
-    
+
     return tensionMap;
 }
 
@@ -215,10 +215,10 @@ function buildRopeLengthConstraint(
 ): { equation: number[]; constant: number } | null {
     // For movable nodes, their displacement affects segment lengths
     // This creates coupling equations between node positions
-    
+
     // Simplified approach: constraint is already satisfied by geometry
     // In full implementation, would add partial derivatives of length w.r.t. positions
-    
+
     return null; // Placeholder - geometric constraints handled implicitly
 }
 
@@ -232,20 +232,20 @@ function buildPulleyTorqueConstraint(
     _unknownIndex: Map<string, number>,
     _numUnknowns: number
 ): { equation: number[]; constant: number } | null {
-    
+
     // Find ropes connected to this pulley
     const connectedRopes = Array.from(graph.edges.values()).filter(
-        edge => edge.type === 'rope' && 
-                (edge.startNodeId === pulley.id || edge.endNodeId === pulley.id)
+        edge => edge.type === 'rope' &&
+            (edge.startNodeId === pulley.id || edge.endNodeId === pulley.id)
     );
-    
+
     if (connectedRopes.length < 2) {
         return null; // Need at least 2 ropes for torque balance
     }
-    
+
     // For ideal massless pulley: T1 = T2 (tensions are equal)
     // This is already enforced by inextensible rope constraint
-    
+
     return null; // Handled by rope tension equality
 }
 

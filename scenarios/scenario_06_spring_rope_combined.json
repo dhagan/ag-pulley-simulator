@@ -1,0 +1,59 @@
+{
+  "version": "1.4.0",
+  "name": "Scenario_6_Spring_Rope_Combined",
+  "description": "Vertical chain: anchor-spring-mass1-rope-mass2",
+  "gravity": 9.81,
+  "components": [
+    {
+      "id": "anchor1",
+      "type": "anchor",
+      "position": {
+        "x": 0,
+        "y": -200
+      },
+      "fixed": true
+    },
+    {
+      "id": "mass1",
+      "type": "mass",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "mass": 6
+    },
+    {
+      "id": "mass2",
+      "type": "mass",
+      "position": {
+        "x": 0,
+        "y": 150
+      },
+      "mass": 12
+    },
+    {
+      "id": "spring1",
+      "type": "spring",
+      "position": {
+        "x": 0,
+        "y": -100
+      },
+      "startNodeId": "anchor1",
+      "endNodeId": "mass1",
+      "restLength": 150,
+      "stiffness": 100,
+      "currentLength": 200
+    },
+    {
+      "id": "rope1",
+      "type": "rope",
+      "position": {
+        "x": 0,
+        "y": 75
+      },
+      "startNodeId": "mass1",
+      "endNodeId": "mass2",
+      "length": 150
+    }
+  ]
+}

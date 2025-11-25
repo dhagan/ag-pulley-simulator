@@ -16,10 +16,13 @@ export function validatePhysicsConstraints(system: SystemState): ValidationWarni
     const warnings: ValidationWarning[] = [];
 
     // Check for non-vertical ropes in simple pulley systems
-    const pulleys = system.components.filter(c => 
+    const pulleys = system.components.filter(c =>
         c.type === ComponentType.PULLEY || c.type === ComponentType.PULLEY_BECKET
     );
 
+    // DISABLED: Vertical rope check needs to use tangent points from graph, not pulley center
+    // TODO: Re-enable once we pass graph to this function and use rope segments
+    /*
     pulleys.forEach(pulley => {
         const connectedRopes = system.components.filter(c => 
             c.type === ComponentType.ROPE && 
@@ -51,11 +54,12 @@ export function validatePhysicsConstraints(system: SystemState): ValidationWarni
             }
         });
     });
+    */
 
     // Check for masses with horizontal displacement in simple systems
     const masses = system.components.filter(c => c.type === ComponentType.MASS);
     const ropes = system.components.filter(c => c.type === ComponentType.ROPE);
-    
+
     if (pulleys.length === 1 && masses.length === 2 && ropes.length === 2) {
         // This looks like an Atwood machine - check alignment
         const pulley = pulleys[0];
@@ -78,10 +82,10 @@ export function validatePhysicsConstraints(system: SystemState): ValidationWarni
  * Auto-align masses vertically under pulleys for Atwood machines
  */
 export function autoAlignAtwoodMachine(system: SystemState): SystemState {
-    const pulleys = system.components.filter(c => 
+    const pulleys = system.components.filter(c =>
         c.type === ComponentType.PULLEY || c.type === ComponentType.PULLEY_BECKET
     );
-    
+
     const masses = system.components.filter(c => c.type === ComponentType.MASS);
     const ropes = system.components.filter(c => c.type === ComponentType.ROPE);
 

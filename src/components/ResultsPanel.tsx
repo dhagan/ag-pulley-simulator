@@ -12,8 +12,8 @@ export const ResultsPanel: React.FC = () => {
     const system = useSystemStore((state) => state.system);
     const [showEquations, setShowEquations] = useState(false);
 
-    // Validate physics constraints
-    const physicsWarnings = validatePhysicsConstraints(system);
+    // Validate physics constraints with graph for tangent point access
+    const physicsWarnings = validatePhysicsConstraints(system, system.graph);
 
     // Build equation system for display
     let equationSystem: any = null;
