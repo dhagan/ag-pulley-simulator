@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_11_Spring_Pulley_Becket",
-  "description": "Spring pulley becket with masses on opposite sides",
+  "description": "Spring pulley becket with masses hanging vertically. Assumptions: Massless Ropes, Frictionless Pulleys",
   "gravity": 9.81,
   "components": [
     {
@@ -22,7 +22,7 @@
       "id": "mass1",
       "type": "mass",
       "position": {
-        "x": -100,
+        "x": -30,
         "y": 150
       },
       "mass": 8
@@ -31,7 +31,7 @@
       "id": "mass2",
       "type": "mass",
       "position": {
-        "x": 100,
+        "x": 30,
         "y": 150
       },
       "mass": 12
@@ -40,7 +40,7 @@
       "id": "rope1",
       "type": "rope",
       "position": {
-        "x": -100,
+        "x": -30,
         "y": 75
       },
       "startNodeId": "mass1",
@@ -51,7 +51,7 @@
       "id": "rope2",
       "type": "rope",
       "position": {
-        "x": 100,
+        "x": 30,
         "y": 75
       },
       "startNodeId": "springPulleyBecket1",

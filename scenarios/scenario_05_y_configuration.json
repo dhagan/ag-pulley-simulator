@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_5_Y_Configuration",
-  "description": "Y-shaped: two anchors supporting one mass (intentional angles)",
+  "description": "Y-shaped: two anchors supporting one mass. Assumptions: Massless Ropes",
   "gravity": 9.81,
   "components": [
     {

@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "my_scenario-1",
-  "description": "Exported scenario - 11/24/2025, 5:10:07 AM",
+  "description": "Atwood machine with two masses. Assumptions: Massless Ropes, Frictionless Pulleys",
   "gravity": 9.81,
   "components": [
     {
@@ -22,17 +22,6 @@
         "y": 60
       },
       "mass": 10
-    },
-    {
-      "id": "rope1",
-      "type": "rope",
-      "position": {
-        "x": 0,
-        "y": 50
-      },
-      "startNodeId": "mass1",
-      "endNodeId": "mass2",
-      "length": 650
     },
     {
       "id": "rope_1763996934783_n5yp9iw",

@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "name": "Scenario_6_Spring_Rope_Combined",
-  "description": "Vertical chain: anchor-spring-mass1-rope-mass2",
+  "description": "Vertical chain: anchor-spring-mass1-rope-mass2. Assumptions: Massless Ropes, Ideal Springs",
   "gravity": 9.81,
   "components": [
     {

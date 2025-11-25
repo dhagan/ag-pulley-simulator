@@ -63,12 +63,19 @@ export function validatePhysicsConstraints(system: SystemState): ValidationWarni
     if (pulleys.length === 1 && masses.length === 2 && ropes.length === 2) {
         // This looks like an Atwood machine - check alignment
         const pulley = pulleys[0];
+        const radius = (pulley as any).radius || 0; // Cast to any to access radius if it exists
+
         masses.forEach(mass => {
             const dx = Math.abs(mass.position.x - pulley.position.x);
-            if (dx > 10) { // More than 10px horizontal offset
+            // Check if aligned with tangent (radius) or center (0)
+            // For Atwood, it should be aligned with radius
+            const offsetFromTangent = Math.abs(dx - radius);
+
+            if (offsetFromTangent > 10 && dx > 10) {
+                // If not aligned with tangent AND not aligned with center (just in case)
                 warnings.push({
                     severity: 'info',
-                    message: `Atwood machine detected: Mass ${mass.id} should be vertically aligned with pulley ${pulley.id} for best results. Current horizontal offset: ${dx.toFixed(0)}px`,
+                    message: `Atwood machine detected: Mass ${mass.id} should be vertically aligned with pulley tangent (radius ${radius}px). Current offset from center: ${dx.toFixed(0)}px`,
                     componentIds: [mass.id, pulley.id],
                 });
             }
