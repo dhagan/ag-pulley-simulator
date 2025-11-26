@@ -14,7 +14,7 @@ export function exportScenario(system: SystemState, filename: string): void {
 
     // Create scenario object
     const scenario = {
-        version: "1.4.0",
+        version: '1.6.1',
         name: filename.replace('.json', ''),
         description: `Exported scenario - ${new Date().toLocaleString()}`,
         gravity: system.gravity,

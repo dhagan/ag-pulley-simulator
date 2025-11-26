@@ -3,17 +3,21 @@ import { useSystemStore } from '../store/useSystemStore';
 import { Tool } from '../types';
 import { exportScenario, importScenario } from '../utils/scenario-io';
 
-export const Toolbar: React.FC = () => {
+interface ToolbarProps {
+    onToggleLeft?: () => void;
+    onToggleRight?: () => void;
+    mobilePanel?: 'none' | 'left' | 'right';
+}
+
+export const Toolbar: React.FC<ToolbarProps> = ({ onToggleLeft, onToggleRight }) => {
     const currentTool = useSystemStore((state) => state.ui.currentTool);
     const setTool = useSystemStore((state) => state.setTool);
     const toggleGrid = useSystemStore((state) => state.toggleGrid);
     const toggleSnapToGrid = useSystemStore((state) => state.toggleSnapToGrid);
     const toggleFBD = useSystemStore((state) => state.toggleFBD);
-    const toggleLabels = useSystemStore((state) => state.toggleLabels);
     const snapMassesToVertical = useSystemStore((state) => state.snapMassesToVertical);
     const showGrid = useSystemStore((state) => state.ui.showGrid);
     const showFBD = useSystemStore((state) => state.ui.showFBD);
-    const showLabels = useSystemStore((state) => state.ui.showLabels);
     const snapToGrid = useSystemStore((state) => state.ui.canvas.snapToGrid);
     const reset = useSystemStore((state) => state.reset);
     const undo = useSystemStore((state) => state.undo);
@@ -45,17 +49,17 @@ export const Toolbar: React.FC = () => {
     };
 
     const toolButtons = [
-        { tool: Tool.SELECT, label: 'Sel', icon: '⬆️' },
-        { tool: Tool.PAN, label: 'Pan', icon: '✋' },
-        { tool: Tool.ADD_ANCHOR, label: 'Anchor', icon: '📌' },
-        { tool: Tool.ADD_PULLEY, label: 'Pulley', icon: '⚙️' },
-        { tool: Tool.ADD_PULLEY_BECKET, label: 'P+Becket', icon: '🪝' },
-        { tool: Tool.ADD_SPRING_PULLEY, label: 'Spr-P', icon: '🔧' },
-        { tool: Tool.ADD_SPRING_PULLEY_BECKET, label: 'SP+Becket', icon: '⚙️' },
-        { tool: Tool.ADD_MASS, label: 'Mass', icon: '📦' },
-        { tool: Tool.ADD_ROPE, label: 'Rope', icon: '🪢' },
-        { tool: Tool.ADD_SPRING, label: 'Spring', icon: '🌀' },
-        { tool: Tool.ADD_FORCE, label: 'Force', icon: '➡️' },
+        { tool: Tool.SELECT, label: 'SEL', icon: '◆' },
+        { tool: Tool.PAN, label: 'PAN', icon: '✋' },
+        { tool: Tool.ADD_ANCHOR, label: 'ANC', icon: '▲' },
+        { tool: Tool.ADD_PULLEY, label: 'PUL', icon: '◉' },
+        { tool: Tool.ADD_PULLEY_BECKET, label: 'P+B', icon: '⊙' },
+        { tool: Tool.ADD_SPRING_PULLEY, label: 'SPR', icon: '◎' },
+        { tool: Tool.ADD_SPRING_PULLEY_BECKET, label: 'S+B', icon: '⊚' },
+        { tool: Tool.ADD_MASS, label: 'MAS', icon: '■' },
+        { tool: Tool.ADD_ROPE, label: 'ROP', icon: '─' },
+        { tool: Tool.ADD_SPRING, label: 'SPG', icon: '≈' },
+        { tool: Tool.ADD_FORCE, label: 'FRC', icon: '→' },
     ];
 
     return (
@@ -65,40 +69,56 @@ export const Toolbar: React.FC = () => {
                 padding: 'var(--spacing-sm)',
                 display: 'flex',
                 gap: 'var(--spacing-sm)',
-                flexWrap: 'wrap',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                borderRadius: 0, // Technical look
+                borderLeft: 'none',
+                borderRight: 'none',
+                borderTop: 'none',
             }}
         >
-            {/* Left side - Title and Version */}
+            {/* Left side - Title and Mobile Toggle */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-                <h1 style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 700,
-                    background: 'linear-gradient(135deg, var(--color-accent-blue), var(--color-accent-cyan))',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    margin: 0,
-                }}>
-                    Pulley Solver
-                </h1>
-                <div style={{
-                    padding: '4px 8px',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid var(--color-accent-blue)',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.75rem',
-                    color: 'var(--color-accent-blue)',
-                    fontWeight: 600,
-                }}>
-                    v1.4.0
+                {/* Mobile Menu Toggle */}
+                <button
+                    className="mobile-only"
+                    onClick={onToggleLeft}
+                    style={{ display: 'none', padding: '4px 8px' }} // Hidden by default, shown via CSS media query
+                >
+                    ☰
+                </button>
+
+                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+                    <h1 style={{
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        color: 'var(--color-text-primary)',
+                        margin: 0,
+                        letterSpacing: '1px',
+                    }}>
+                        PULLEY.SYS
+                    </h1>
+                    <span style={{
+                        fontSize: '0.6rem',
+                        color: 'var(--color-accent-blue)',
+                        fontFamily: 'var(--font-mono)',
+                    }}>
+                        v1.6.1 // ENG_MODE
+                    </span>
                 </div>
             </div>
 
-            {/* Right side - Tools and controls */}
-            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
+            {/* Center - Scrollable Tools */}
+            <div style={{
+                display: 'flex',
+                gap: 'var(--spacing-xs)',
+                alignItems: 'center',
+                overflowX: 'auto',
+                maxWidth: '100%',
+                paddingBottom: '2px', // For scrollbar
+                scrollbarWidth: 'none', // Firefox
+            }} className="hide-scrollbar">
+
                 {toolButtons.map(({ tool, label, icon }) => (
                     <button
                         key={tool}
@@ -106,81 +126,67 @@ export const Toolbar: React.FC = () => {
                         onClick={() => setTool(tool)}
                         title={label}
                         style={{
-                            minWidth: '60px',
-                            padding: '4px 8px',
+                            minWidth: '40px',
+                            padding: '6px',
                             display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
-                            gap: '4px',
                             justifyContent: 'center',
-                            fontSize: '0.75rem',
+                            fontSize: '0.7rem',
+                            gap: '2px',
                         }}
                     >
-                        <span>{icon}</span>
-                        <span className="text-sm">{label}</span>
+                        <span style={{ fontSize: '1.2em' }}>{icon}</span>
+                        <span className="text-xs font-mono" style={{ display: 'none' }}>{label}</span>
                     </button>
                 ))}
-            </div>
 
-            <div
-                style={{
-                    width: '2px',
-                    height: '30px',
-                    background: 'var(--color-border)',
-                    margin: '0 var(--spacing-sm)',
-                }}
-            />
+                <div style={{ width: '1px', height: '24px', background: 'var(--color-border)', margin: '0 4px', flexShrink: 0 }} />
 
-            <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
-                <button onClick={toggleGrid} className={showGrid ? 'selected' : ''}>
-                    Grid {showGrid ? '✓' : '✗'}
+                <button onClick={toggleGrid} className={showGrid ? 'selected' : ''} title="Toggle Grid">
+                    #
                 </button>
-                <button onClick={toggleSnapToGrid} className={snapToGrid ? 'selected' : ''}>
-                    Snap {snapToGrid ? '✓' : '✗'}
+                <button onClick={toggleSnapToGrid} className={snapToGrid ? 'selected' : ''} title="Snap to Grid">
+                    ⧉
                 </button>
-                <button onClick={snapMassesToVertical} title="Snap masses to hang vertically from pulleys/anchors">
-                    📐 Align
+                <button onClick={snapMassesToVertical} title="Align Masses">
+                    📐
                 </button>
-                <button onClick={toggleFBD} className={showFBD ? 'selected' : ''} title="Show Free Body Diagrams">
-                    FBD {showFBD ? '✓' : '✗'}
-                </button>
-                <button onClick={toggleLabels} className={showLabels ? 'selected' : ''} title="Show Component Labels">
-                    Labels {showLabels ? '✓' : '✗'}
+                <button onClick={toggleFBD} className={showFBD ? 'selected' : ''} title="Free Body Diagram">
+                    FBD
                 </button>
             </div>
 
-            <div
-                style={{
-                    width: '2px',
-                    height: '30px',
-                    background: 'var(--color-border)',
-                    margin: '0 var(--spacing-sm)',
-                }}
-            />
+            {/* Right side - Actions and Mobile Toggle */}
+            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                <div className="desktop-only" style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                    <button onClick={undo} disabled={!hasHistory} style={{ opacity: hasHistory ? 1 : 0.5 }}>
+                        ⏪
+                    </button>
+                    <button onClick={handleExport} title="Save">💾</button>
+                    <button onClick={handleImport} title="Load">📁</button>
+                    <button onClick={reset} style={{ color: 'var(--color-accent-red)', borderColor: 'var(--color-accent-red)' }}>
+                        RST
+                    </button>
+                </div>
 
-            <button
-                onClick={undo}
-                disabled={!hasHistory}
-                title="Undo last action"
-                style={{
-                    opacity: hasHistory ? 1 : 0.5,
-                    cursor: hasHistory ? 'pointer' : 'not-allowed',
-                }}
-            >
-                ⏪ Undo
-            </button>
-
-            <button onClick={handleExport} title="Export current scenario to JSON file">
-                💾 Export
-            </button>
-
-            <button onClick={handleImport} title="Import scenario from JSON file">
-                📁 Import
-            </button>
-
-            <button onClick={reset} style={{ background: 'var(--color-accent-red)', color: 'white' }}>
-                Reset
-            </button>
+                {/* Mobile Data Toggle */}
+                <button
+                    className="mobile-only"
+                    onClick={onToggleRight}
+                    style={{ display: 'none', padding: '4px 8px' }}
+                >
+                    DATA
+                </button>
             </div>
+
+            <style>{`
+                @media (max-width: 768px) {
+                    .mobile-only { display: block !important; }
+                    .desktop-only { display: none !important; }
+                    .hide-scrollbar::-webkit-scrollbar { display: none; }
+                }
+            `}</style>
         </div>
     );
 };

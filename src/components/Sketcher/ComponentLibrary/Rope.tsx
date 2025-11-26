@@ -36,11 +36,11 @@ export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
 
     // Use smart routing segments if available
     const segments = ropeSegments.get(rope.id);
-    
+
     if (segments && segments.length > 0) {
         // Render using smart routing path
         const pathData = generateRopePathFromSegments(segments);
-        
+
         return (
             <g onClick={onClick} style={{ cursor: 'pointer' }}>
                 <path
@@ -51,19 +51,47 @@ export const Rope: React.FC<RopeProps> = ({ rope, isSelected, onClick }) => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                 />
-                
+
                 {/* End points */}
                 <circle cx={segments[0].start.x} cy={segments[0].start.y} r={3} fill="var(--color-rope)" />
-                <circle 
-                    cx={segments[segments.length - 1].end.x} 
-                    cy={segments[segments.length - 1].end.y} 
-                    r={3} 
-                    fill="var(--color-rope)" 
+                <circle
+                    cx={segments[segments.length - 1].end.x}
+                    cy={segments[segments.length - 1].end.y}
+                    r={3}
+                    fill="var(--color-rope)"
                 />
+
+                {/* Tension label */}
+                {(() => {
+                    const solverResult = useSystemStore.getState().solverResult;
+                    const tension = solverResult?.tensions.get(rope.id);
+                    if (tension !== undefined) {
+                        // Position label at midpoint of rope
+                        const midIdx = Math.floor(segments.length / 2);
+                        const midSeg = segments[midIdx];
+                        const midX = (midSeg.start.x + midSeg.end.x) / 2;
+                        const midY = (midSeg.start.y + midSeg.end.y) / 2;
+
+                        return (
+                            <text
+                                x={midX}
+                                y={midY - 8}
+                                textAnchor="middle"
+                                fill="var(--color-rope)"
+                                fontSize="10"
+                                fontWeight="bold"
+                                fontFamily="var(--font-mono)"
+                            >
+                                T={tension.toFixed(1)}N
+                            </text>
+                        );
+                    }
+                    return null;
+                })()}
             </g>
         );
     }
-    
+
     // Fallback to simple line rendering
     return (
         <g onClick={onClick} style={{ cursor: 'pointer' }}>

@@ -19,22 +19,22 @@ export const TestScenarios: React.FC = () => {
         const loadScenarios = async () => {
             console.log('Scenario modules found:', Object.keys(scenarioModules));
             const scenarioList: ScenarioInfo[] = [];
-            
+
             // Load all scenario files
             const paths = Object.keys(scenarioModules).sort();
-            
+
             if (paths.length === 0) {
                 console.warn('No scenario files found!');
             }
-            
+
             let scenarioNum = 1;
             for (const path of paths) {
                 try {
                     const module = await scenarioModules[path]() as any;
-                    
+
                     // Extract filename for display
                     const filename = path.split('/').pop()?.replace('.json', '') || `Scenario ${scenarioNum}`;
-                    
+
                     scenarioList.push({
                         num: scenarioNum++,
                         name: module.name || filename,
@@ -45,10 +45,10 @@ export const TestScenarios: React.FC = () => {
                     console.warn(`Failed to load scenario from ${path}:`, error);
                 }
             }
-            
+
             setScenarios(scenarioList);
         };
-        
+
         loadScenarios();
     }, []);
 
@@ -69,23 +69,38 @@ export const TestScenarios: React.FC = () => {
                 flexDirection: 'column',
                 gap: 'var(--spacing-sm)',
                 overflowY: 'auto',
+                borderRadius: 0,
+                borderTop: 'none',
+                borderBottom: 'none',
+                borderLeft: 'none',
+                height: '100%',
             }}
         >
             <h3
                 style={{
                     fontSize: '1rem',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     margin: 0,
                     marginBottom: 'var(--spacing-xs)',
                     color: 'var(--color-accent-cyan)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    borderBottom: '1px solid var(--color-border)',
+                    paddingBottom: '4px'
                 }}
             >
-                🧪 Test Scenarios
+                TEST_SCENARIOS
             </h3>
 
             {scenarios.length === 0 && (
-                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', textAlign: 'center', padding: 'var(--spacing-md)' }}>
-                    Loading scenarios...
+                <div style={{
+                    color: 'var(--color-text-secondary)',
+                    fontSize: '0.75rem',
+                    textAlign: 'center',
+                    padding: 'var(--spacing-md)',
+                    fontFamily: 'var(--font-mono)'
+                }}>
+                    LOADING_SCENARIOS...
                 </div>
             )}
 
@@ -96,7 +111,7 @@ export const TestScenarios: React.FC = () => {
                     style={{
                         background: 'rgba(255, 255, 255, 0.02)',
                         border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-sm)',
+                        borderRadius: 0,
                         color: 'var(--color-text)',
                         padding: 'var(--spacing-sm)',
                         textAlign: 'left',
@@ -107,20 +122,34 @@ export const TestScenarios: React.FC = () => {
                         transition: 'all 0.2s',
                     }}
                     onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)';
-                        e.currentTarget.style.borderColor = 'var(--color-accent-blue)';
+                        e.currentTarget.style.background = 'rgba(6, 182, 212, 0.1)';
+                        e.currentTarget.style.borderColor = 'var(--color-accent-cyan)';
+                        e.currentTarget.style.color = 'var(--color-accent-cyan)';
                     }}
                     onMouseLeave={(e) => {
                         e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
                         e.currentTarget.style.borderColor = 'var(--color-border)';
+                        e.currentTarget.style.color = 'var(--color-text)';
                     }}
                 >
-                    <div style={{ fontSize: '1.5rem', lineHeight: 1 }}>{test.icon}</div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '2px' }}>
-                            {test.num}. {test.name}
+                    <div style={{ fontSize: '1.2rem', lineHeight: 1 }}>{test.icon}</div>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <div style={{
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            marginBottom: '2px',
+                            fontFamily: 'var(--font-mono)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}>
+                            {test.num.toString().padStart(2, '0')}_{test.name.toUpperCase().replace(/\s+/g, '_')}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                        <div style={{
+                            fontSize: '0.7rem',
+                            color: 'var(--color-text-secondary)',
+                            lineHeight: '1.2'
+                        }}>
                             {test.description}
                         </div>
                     </div>

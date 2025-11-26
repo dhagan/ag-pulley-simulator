@@ -10,7 +10,7 @@ interface ForceVectorProps {
 
 export const ForceVector: React.FC<ForceVectorProps> = ({ force, isSelected, onClick }) => {
     const system = useSystemStore((state) => state.system);
-    
+
     // If force is applied to a node, use that node's position
     let position = force.position;
     if (force.appliedToNodeId) {
@@ -19,8 +19,11 @@ export const ForceVector: React.FC<ForceVectorProps> = ({ force, isSelected, onC
             position = targetNode.position;
         }
     }
-    
+
     const scale = 0.5; // Scale factor for visualization
+
+    // Calculate magnitude
+    const magnitude = Math.sqrt(force.Fx * force.Fx + force.Fy * force.Fy);
 
     // Calculate angle from components
     const angleRad = Math.atan2(-force.Fy, force.Fx); // Negative Fy because SVG Y is inverted
@@ -64,28 +67,27 @@ export const ForceVector: React.FC<ForceVectorProps> = ({ force, isSelected, onC
                 fill={isSelected ? 'var(--color-accent-cyan)' : 'var(--color-force)'}
             />
 
-            {/* Label with Fx and Fy */}
+            {/* Label with magnitude and components */}
             <text
                 x={position.x + 15}
-                y={position.y - 10}
+                y={position.y - 15}
                 textAnchor="start"
                 fill="var(--color-force)"
-                fontSize="12"
+                fontSize="11"
                 fontWeight="bold"
                 fontFamily="var(--font-mono)"
             >
-                Fx={force.Fx.toFixed(0)}N
+                F={magnitude.toFixed(1)}N
             </text>
             <text
                 x={position.x + 15}
-                y={position.y + 5}
+                y={position.y}
                 textAnchor="start"
-                fill="var(--color-force)"
-                fontSize="12"
-                fontWeight="bold"
+                fill="var(--color-text-secondary)"
+                fontSize="9"
                 fontFamily="var(--font-mono)"
             >
-                Fy={force.Fy.toFixed(0)}N
+                ({force.Fx.toFixed(0)}, {force.Fy.toFixed(0)})
             </text>
         </g>
     );

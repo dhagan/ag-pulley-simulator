@@ -306,21 +306,21 @@ export const Canvas: React.FC = () => {
                     if (startComp) {
                         // Get end position, optionally constrained
                         let endPos = component.position;
-                        
+
                         // Auto-align vertically if one end is a mass and the other is pulley/anchor
-                        const startIsPulleyOrAnchor = startComp.type === ComponentType.PULLEY || 
-                                                      startComp.type === ComponentType.PULLEY_BECKET ||
-                                                      startComp.type === ComponentType.SPRING_PULLEY ||
-                                                      startComp.type === ComponentType.SPRING_PULLEY_BECKET ||
-                                                      startComp.type === ComponentType.ANCHOR;
-                        const endIsPulleyOrAnchor = component.type === ComponentType.PULLEY || 
-                                                    component.type === ComponentType.PULLEY_BECKET ||
-                                                    component.type === ComponentType.SPRING_PULLEY ||
-                                                    component.type === ComponentType.SPRING_PULLEY_BECKET ||
-                                                    component.type === ComponentType.ANCHOR;
+                        const startIsPulleyOrAnchor = startComp.type === ComponentType.PULLEY ||
+                            startComp.type === ComponentType.PULLEY_BECKET ||
+                            startComp.type === ComponentType.SPRING_PULLEY ||
+                            startComp.type === ComponentType.SPRING_PULLEY_BECKET ||
+                            startComp.type === ComponentType.ANCHOR;
+                        const endIsPulleyOrAnchor = component.type === ComponentType.PULLEY ||
+                            component.type === ComponentType.PULLEY_BECKET ||
+                            component.type === ComponentType.SPRING_PULLEY ||
+                            component.type === ComponentType.SPRING_PULLEY_BECKET ||
+                            component.type === ComponentType.ANCHOR;
                         const startIsMass = startComp.type === ComponentType.MASS;
                         const endIsMass = component.type === ComponentType.MASS;
-                        
+
                         // If connecting mass to pulley/anchor, force vertical alignment
                         if ((startIsMass && endIsPulleyOrAnchor) || (endIsMass && startIsPulleyOrAnchor)) {
                             // Force vertical alignment - mass takes X position of pulley/anchor
@@ -354,7 +354,7 @@ export const Canvas: React.FC = () => {
                                 // End is mass, start is pulley/anchor - align mass to pulley X
                                 endPos = { x: startComp.position.x, y: component.position.y };
                                 updateComponent(component.id, { position: endPos });
-                                
+
                                 const ropeLength = distance(startComp.position, endPos);
                                 const newRope: Component = {
                                     id: generateId('rope'),
@@ -380,12 +380,12 @@ export const Canvas: React.FC = () => {
                             setTool(Tool.SELECT);
                             return; // Exit early since we handled it
                         }
-                        
+
                         // If Shift key is held, snap to vertical or horizontal
                         if (e.shiftKey) {
                             const dx = Math.abs(component.position.x - startComp.position.x);
                             const dy = Math.abs(component.position.y - startComp.position.y);
-                            
+
                             // Snap to dominant axis
                             if (dx > dy) {
                                 // Horizontal - keep Y same as start
@@ -394,11 +394,11 @@ export const Canvas: React.FC = () => {
                                 // Vertical - keep X same as start
                                 endPos = { x: startComp.position.x, y: component.position.y };
                             }
-                            
+
                             // Update component position to snapped position
                             updateComponent(component.id, { position: endPos });
                         }
-                        
+
                         const ropeLength = distance(startComp.position, endPos);
                         const newRope: Component = {
                             id: generateId('rope'),
@@ -526,7 +526,7 @@ export const Canvas: React.FC = () => {
                         const becketNodeId = `${component.id}_becket`;
                         const becketPos = { x: component.position.x, y: component.position.y + component.radius + 12 };
                         const isSelected = ropeStartNodeId === becketNodeId;
-                        
+
                         return (
                             <g key={`${component.id}_becket_point`}>
                                 <circle
@@ -546,7 +546,7 @@ export const Canvas: React.FC = () => {
                                                 const startNodeId = ropeStartNodeId;
                                                 const startIsRegularComponent = system.components.find(c => c.id === startNodeId);
                                                 const startIsBecket = startNodeId.endsWith('_becket');
-                                                
+
                                                 let startPos = becketPos;
                                                 if (startIsRegularComponent) {
                                                     startPos = startIsRegularComponent.position;
@@ -557,7 +557,7 @@ export const Canvas: React.FC = () => {
                                                         startPos = { x: parentComp.position.x, y: parentComp.position.y + parentComp.radius + 12 };
                                                     }
                                                 }
-                                                
+
                                                 const ropeLength = distance(startPos, becketPos);
                                                 const newRope: Component = {
                                                     id: generateId('rope'),
@@ -657,26 +657,39 @@ export const Canvas: React.FC = () => {
                         top: contextMenu.y,
                         left: contextMenu.x,
                         zIndex: 1000,
-                        padding: '8px',
-                        borderRadius: '8px',
+                        padding: '4px',
+                        borderRadius: 0,
+                        border: '1px solid var(--color-border)',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '4px',
-                        minWidth: '120px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                        gap: '2px',
+                        minWidth: '140px',
+                        boxShadow: 'var(--shadow-md)',
+                        background: 'var(--color-surface)',
                     }}
                 >
-                    <div style={{ padding: '2px 6px', fontSize: '11px', color: 'var(--color-text-secondary)', fontWeight: 'bold' }}>Add</div>
+                    <div style={{
+                        padding: '4px 8px',
+                        fontSize: '0.7rem',
+                        color: 'var(--color-text-secondary)',
+                        fontWeight: 'bold',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px',
+                        borderBottom: '1px solid var(--color-border)',
+                        marginBottom: '4px'
+                    }}>
+                        ADD COMPONENT
+                    </div>
                     {[
-                        { type: ComponentType.ANCHOR, label: 'Anchor', icon: '⚓' },
-                        { type: ComponentType.PULLEY, label: 'Pulley', icon: '⭕' },
-                        { type: ComponentType.PULLEY_BECKET, label: 'P+Becket', icon: '🪝' },
-                        { type: ComponentType.SPRING_PULLEY, label: 'Spr-P', icon: '🔧' },
-                        { type: ComponentType.SPRING_PULLEY_BECKET, label: 'SP+Becket', icon: '⚙️' },
-                        { type: ComponentType.MASS, label: 'Mass', icon: '⚖️' },
-                        { type: ComponentType.SPRING, label: 'Spring', icon: '🌀' },
-                        { type: ComponentType.ROPE, label: 'Rope', icon: '〰️' },
-                        { type: ComponentType.FORCE_VECTOR, label: 'Force', icon: '➡️' },
+                        { type: ComponentType.ANCHOR, label: 'ANCHOR', icon: '▲' },
+                        { type: ComponentType.PULLEY, label: 'PULLEY', icon: '◉' },
+                        { type: ComponentType.PULLEY_BECKET, label: 'PULLEY+B', icon: '⊙' },
+                        { type: ComponentType.SPRING_PULLEY, label: 'SPR-PULLEY', icon: '◎' },
+                        { type: ComponentType.SPRING_PULLEY_BECKET, label: 'SPR-P+B', icon: '⊚' },
+                        { type: ComponentType.MASS, label: 'MASS', icon: '■' },
+                        { type: ComponentType.SPRING, label: 'SPRING', icon: '≈' },
+                        { type: ComponentType.ROPE, label: 'ROPE', icon: '─' },
+                        { type: ComponentType.FORCE_VECTOR, label: 'FORCE', icon: '→' },
                     ].map((item) => (
                         <button
                             key={item.type}
@@ -684,20 +697,27 @@ export const Canvas: React.FC = () => {
                             style={{
                                 background: 'transparent',
                                 border: 'none',
-                                color: 'var(--color-text)',
+                                color: 'var(--color-text-primary)',
                                 padding: '6px 8px',
                                 textAlign: 'left',
                                 cursor: 'pointer',
-                                borderRadius: '4px',
+                                borderRadius: 0,
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px',
-                                fontSize: '14px',
+                                fontSize: '0.75rem',
+                                fontFamily: 'var(--font-mono)',
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'var(--color-surface-hover)';
+                                e.currentTarget.style.color = 'var(--color-accent-blue)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = 'var(--color-text-primary)';
+                            }}
                         >
-                            <span>{item.icon}</span>
+                            <span style={{ width: '16px', textAlign: 'center' }}>{item.icon}</span>
                             {item.label}
                         </button>
                     ))}

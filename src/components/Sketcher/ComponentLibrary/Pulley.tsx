@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pulley as PulleyType } from '../../../types';
+import { Pulley as PulleyType, ComponentType, Rope } from '../../../types';
 import { useSystemStore } from '../../../store/useSystemStore';
 
 interface PulleyProps {
@@ -15,8 +15,9 @@ export const Pulley: React.FC<PulleyProps> = ({ pulley, isSelected, onClick }) =
     // Calculate rope wrapping arc
     const renderRopeArc = () => {
         // Find connected ropes
-        const connectedRopes = system.components.filter(c =>
-            c.type === 'rope' && (c.startNodeId === pulley.id || c.endNodeId === pulley.id)
+        const connectedRopes = system.components.filter((c): c is Rope =>
+            c.type === ComponentType.ROPE &&
+            (c.startNodeId === pulley.id || c.endNodeId === pulley.id)
         );
 
         if (connectedRopes.length < 2) return null;

@@ -1,7 +1,7 @@
 {
   "name": "pulley-system-analysis-tool",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.6.1",
   "type": "module",
   "homepage": "https://dhagan.github.io/ag-pulley-simulator",
   "scripts": {
